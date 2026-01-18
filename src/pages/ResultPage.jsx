@@ -4,6 +4,7 @@ import RiskIndicator from '../components/RiskIndicator'
 import ContractVisual from '../components/ContractVisual'
 import ContractRelationHub from '../components/ContractRelationHub'
 import { generatePdfReport } from '../services/pdfService'
+import { saveHistory } from '../services/historyService'
 import './ResultPage.css'
 
 function ResultPage() {
@@ -25,7 +26,13 @@ function ResultPage() {
             navigate('/')
             return
         }
-        setResult(JSON.parse(analysisResult))
+        const parsedResult = JSON.parse(analysisResult)
+        setResult(parsedResult)
+
+        // 이력 저장 (샘플 분석이 아닌 경우에만 저장)
+        if (!parsedResult.isSample) {
+            saveHistory(parsedResult)
+        }
     }, [navigate])
 
     const handleDownloadPdf = async () => {
@@ -232,7 +239,9 @@ function ResultPage() {
                     <button className="btn btn-primary" onClick={handleDownloadPdf} disabled={isGeneratingPdf}>
                         {isGeneratingPdf ? '생성 중...' : 'PDF 리포트'}
                     </button>
-                    <button className="btn btn-secondary" onClick={handleShare}>공유</button>
+                    <button className="btn btn-kakao" onClick={handleShare}>
+                        카카오톡 공유
+                    </button>
                 </div>
                 <button className="btn btn-secondary btn-lg" onClick={handleNewAnalysis}>새 분석</button>
             </section>

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { extractTextFromImage } from '../services/ocrService'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
+import { extractTextFromImage, extractTextFromPdf } from '../services/ocrService'
 import { analyzeDocuments } from '../services/analysisService'
 import './AnalysisPage.css'
 
 function AnalysisPage() {
     const navigate = useNavigate()
+    const location = useLocation()
     const [searchParams] = useSearchParams()
     const isSample = searchParams.get('sample') === 'true'
 
@@ -95,23 +96,48 @@ function AnalysisPage() {
             setCurrentStep(0)
             setStatusMessage('업로드된 문서를 로드하는 중...')
 
-            const analysisData = sessionStorage.getItem('analysisData')
-            if (!analysisData) {
+            // 1. location.state에서 파일 확인 (PDF 등 대용량 파일)
+            const stateData = location.state
+            // 2. sessionStorage에서 데이터 확인 (이미지 Base64)
+            const sessionData = sessionStorage.getItem('analysisData')
+
+            let contractData, registryData
+            let hasRegistryDoc = false
+
+            if (stateData && stateData.contractFile) {
+                contractData = stateData.contractFile
+                registryData = stateData.registryFile
+                hasRegistryDoc = !!registryData
+            } else if (sessionData) {
+                const parsed = JSON.parse(sessionData)
+                contractData = parsed.contract.data
+                registryData = parsed.registry ? parsed.registry.data : null
+                hasRegistryDoc = !!registryData
+            } else {
                 throw new Error('분석할 문서가 없습니다. 문서를 다시 업로드해주세요.')
             }
 
-            const { contract, registry } = JSON.parse(analysisData)
-            const hasRegistryDoc = !!registry
             setHasRegistry(hasRegistryDoc)
             await delay(500)
 
             // 계약서 OCR
             setCurrentStep(1)
             setStatusMessage('계약서에서 텍스트를 추출하는 중...')
-            const contractText = await extractTextFromImage(
-                contract.data,
-                (progress) => setOcrProgress(progress.progress * 100)
-            )
+
+            let contractText = ''
+            // PDF 파일 객체인 경우
+            if (contractData instanceof File && contractData.type === 'application/pdf') {
+                contractText = await extractTextFromPdf(
+                    contractData,
+                    (progress) => setOcrProgress(progress.progress * 100)
+                )
+            } else {
+                // 이미지 데이터 (Base64) 또는 이미지 파일 객체
+                contractText = await extractTextFromImage(
+                    contractData,
+                    (progress) => setOcrProgress(progress.progress * 100)
+                )
+            }
 
             let registryText = ''
 
@@ -120,10 +146,18 @@ function AnalysisPage() {
                 setCurrentStep(2)
                 setOcrProgress(0)
                 setStatusMessage('등기부등본에서 텍스트를 추출하는 중...')
-                registryText = await extractTextFromImage(
-                    registry.data,
-                    (progress) => setOcrProgress(progress.progress * 100)
-                )
+
+                if (registryData instanceof File && registryData.type === 'application/pdf') {
+                    registryText = await extractTextFromPdf(
+                        registryData,
+                        (progress) => setOcrProgress(progress.progress * 100)
+                    )
+                } else {
+                    registryText = await extractTextFromImage(
+                        registryData,
+                        (progress) => setOcrProgress(progress.progress * 100)
+                    )
+                }
 
                 setCurrentStep(3)
             } else {

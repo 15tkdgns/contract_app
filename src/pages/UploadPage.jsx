@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import FileUploader from '../components/FileUploader'
+import { getHistory } from '../services/historyService'
 import './UploadPage.css'
 
 function UploadPage() {
@@ -10,6 +11,11 @@ function UploadPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [showSampleBuilder, setShowSampleBuilder] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
+    const [history, setHistory] = useState([])
+
+    useEffect(() => {
+        setHistory(getHistory())
+    }, [])
 
     // 커스텀 샘플 설정
     const [sampleConfig, setSampleConfig] = useState({
@@ -29,15 +35,36 @@ function UploadPage() {
 
         setIsLoading(true)
 
-        const contractData = await fileToBase64(contractFile)
-        const registryData = registryFile ? await fileToBase64(registryFile) : null
+        try {
+            // PDF 파일이 포함된 경우 state로 전달 (대용량 처리)
+            const isPdfUpload = (contractFile.type === 'application/pdf') ||
+                (registryFile && registryFile.type === 'application/pdf')
 
-        sessionStorage.setItem('analysisData', JSON.stringify({
-            contract: { name: contractFile.name, data: contractData },
-            registry: registryFile ? { name: registryFile.name, data: registryData } : null
-        }))
+            if (isPdfUpload) {
+                // PDF는 sessionStorage에 저장하지 않고 직접 state로 전달
+                navigate('/analysis', {
+                    state: {
+                        contractFile,
+                        registryFile
+                    }
+                })
+            } else {
+                // 이미지 파일은 기존 방식대로 Base64 변환 후 sessionStorage 저장 (새로고침 지원)
+                const contractData = await fileToBase64(contractFile)
+                const registryData = registryFile ? await fileToBase64(registryFile) : null
 
-        navigate('/analysis')
+                sessionStorage.setItem('analysisData', JSON.stringify({
+                    contract: { name: contractFile.name, data: contractData },
+                    registry: registryFile ? { name: registryFile.name, data: registryData } : null
+                }))
+
+                navigate('/analysis')
+            }
+        } catch (error) {
+            console.error('파일 처리 중 오류:', error)
+            alert('파일을 처리하는 중 오류가 발생했습니다.')
+            setIsLoading(false)
+        }
     }
 
     const handleShowPreview = () => {
@@ -282,6 +309,30 @@ function UploadPage() {
                     {isLoading ? '준비 중...' : '분석 시작'}
                 </button>
             </div>
+
+            {/* 최근 분석 이력 */}
+            {history.length > 0 && (
+                <div className="history-section">
+                    <h3 className="history-title">최근 분석 이력</h3>
+                    <div className="history-list">
+                        {history.map(item => (
+                            <div key={item.id} className="history-item" onClick={() => {
+                                sessionStorage.setItem('analysisResult', JSON.stringify(item.data))
+                                navigate('/result')
+                            }}>
+                                <div className={`history-risk-badge ${item.overallRiskLevel}`}>
+                                    {item.overallScore}점
+                                </div>
+                                <div className="history-info">
+                                    <h4>{item.address}</h4>
+                                    <p>{new Date(item.date).toLocaleDateString()} 분석</p>
+                                </div>
+                                <span className="history-arrow">&gt;</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* 수동 입력 링크 */}
             <div className="manual-input-link">
