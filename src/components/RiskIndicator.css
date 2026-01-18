@@ -1,0 +1,72 @@
+.risk-indicator {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    flex-shrink: 0;
+}
+
+.score-ring {
+    width: 100%;
+    height: 100%;
+}
+
+.ring-bg {
+    stroke: var(--bg-tertiary);
+}
+
+.ring-progress {
+    transition: stroke-dashoffset 1s ease-out;
+}
+
+.ring-progress.success {
+    stroke: var(--color-success);
+}
+
+.ring-progress.warning {
+    stroke: var(--color-warning);
+}
+
+.ring-progress.danger {
+    stroke: var(--color-danger);
+}
+
+.ring-progress.critical {
+    stroke: var(--color-critical);
+}
+
+.score-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.score-value {
+    display: block;
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.score-value.success {
+    color: var(--color-success);
+}
+
+.score-value.warning {
+    color: var(--color-warning);
+}
+
+.score-value.danger {
+    color: var(--color-danger);
+}
+
+.score-value.critical {
+    color: var(--color-critical);
+}
+
+.score-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-top: var(--space-1);
+}

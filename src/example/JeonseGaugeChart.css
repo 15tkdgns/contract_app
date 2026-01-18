@@ -1,0 +1,123 @@
+.gauge-card {
+    grid-column: span 1;
+}
+
+.gauge-content {
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.gauge-container {
+    position: relative;
+    width: 100%;
+    max-width: 280px;
+}
+
+.gauge-svg {
+    width: 100%;
+    height: auto;
+}
+
+.gauge-value {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.ratio-number {
+    display: block;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.ratio-label {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}
+
+.risk-badge {
+    display: inline-block;
+    padding: var(--space-2) var(--space-4);
+    border-radius: 20px;
+    color: white;
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-2);
+}
+
+.risk-desc {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.gauge-details {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: #f8fafc;
+    border-radius: var(--radius-md);
+    width: 100%;
+    margin-bottom: var(--space-3);
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.detail-label {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}
+
+.detail-value {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.detail-value.safe {
+    color: #22c55e;
+}
+
+.detail-divider {
+    width: 1px;
+    height: 30px;
+    background: #e2e8f0;
+}
+
+.gauge-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    justify-content: center;
+}
+
+.gauge-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+.gauge-legend .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.card-icon.gauge-bg {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+}

@@ -1,0 +1,289 @@
+.contract-visual {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.visual-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+}
+
+.visual-section h4 {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2);
+    font-weight: 600;
+}
+
+/* Parties - 가로 레이아웃 */
+.parties {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+}
+
+.party {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.party-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+.landlord .party-icon {
+    background: var(--color-info-light);
+    color: var(--color-info);
+}
+
+.tenant .party-icon {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.party-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.party-role {
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.party-name {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.proxy-tag {
+    display: inline-block;
+    font-size: 9px;
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+    padding: 1px 4px;
+    border-radius: var(--radius-full);
+    margin-top: 2px;
+}
+
+.contract-arrow {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.contract-arrow svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Info Cards - 2열 그리드 */
+.info-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+    padding: var(--space-3);
+}
+
+.info-card {
+    text-align: center;
+    padding: var(--space-2);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.info-card:last-child {
+    grid-column: span 2;
+}
+
+.info-label {
+    display: block;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+.info-value {
+    display: block;
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+/* Ratio Chart */
+.ratio-bar-container {
+    margin-bottom: var(--space-2);
+}
+
+.ratio-bar {
+    height: 28px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+
+.ratio-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    transition: width 0.5s ease;
+}
+
+.segment-label {
+    font-size: 11px;
+    color: white;
+    font-weight: 600;
+}
+
+.ratio-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+.danger-line {
+    color: var(--color-danger);
+    font-weight: 600;
+}
+
+.ratio-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-size: var(--font-size-sm);
+}
+
+.ratio-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.ratio-item.total {
+    font-weight: 600;
+    padding-top: var(--space-1);
+    border-top: 1px solid var(--border-color);
+    margin-top: var(--space-1);
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+
+.dot.deposit {
+    background: var(--color-success);
+}
+
+.dot.mortgage {
+    background: var(--color-critical);
+}
+
+/* Safety Margin */
+.margin-display {
+    text-align: center;
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+}
+
+.margin-display.positive {
+    background: var(--color-success-light);
+}
+
+.margin-display.negative {
+    background: var(--color-danger-light);
+}
+
+.margin-value {
+    display: block;
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+}
+
+.margin-display.positive .margin-value {
+    color: var(--color-success);
+}
+
+.margin-display.negative .margin-value {
+    color: var(--color-danger);
+}
+
+.margin-desc {
+    display: block;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+/* Protection Status */
+.status-items {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+}
+
+.status-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: var(--space-2);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+}
+
+.status-item.active {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.status-item svg {
+    width: 18px;
+    height: 18px;
+}
+
+.status-item span {
+    font-size: 9px;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Address */
+.address-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+}
+
+.address-info svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}

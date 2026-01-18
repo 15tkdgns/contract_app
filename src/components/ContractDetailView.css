@@ -1,0 +1,489 @@
+.contract-detail-view {
+    margin-top: var(--space-4);
+}
+
+/* Tabs */
+.detail-tabs {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.detail-tabs .tab-btn {
+    flex: 1;
+    padding: var(--space-2);
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.detail-tabs .tab-btn.active {
+    background: var(--accent-primary);
+    color: white;
+}
+
+/* Info Content */
+.info-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.info-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+}
+
+.info-section h3 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+    color: var(--accent-primary);
+}
+
+.info-cards {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.info-card {
+    flex: 1;
+    background: var(--bg-secondary);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--space-2);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.info-card .card-label {
+    font-size: 9px;
+    color: var(--text-muted);
+}
+
+.info-card .card-value {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+/* Asset Section */
+.asset-detail {
+    margin-bottom: var(--space-3);
+}
+
+.asset-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-1) 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: var(--font-size-xs);
+}
+
+.asset-row .label {
+    color: var(--text-muted);
+}
+
+.asset-row .value {
+    font-weight: 500;
+}
+
+.asset-row .value.highlight {
+    color: var(--accent-primary);
+}
+
+.money-cards {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.money-card {
+    flex: 1;
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.money-card .label {
+    font-size: 9px;
+}
+
+.money-card .value {
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+}
+
+.money-card.deposit {
+    background: #fef2f2;
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger);
+}
+
+.money-card.down {
+    background: #fff7ed;
+    border: 1px solid var(--color-warning);
+    color: var(--color-warning);
+}
+
+.money-card.balance {
+    background: #f0fdf4;
+    border: 1px solid var(--color-success);
+    color: var(--color-success);
+}
+
+/* Period Cards */
+.period-cards {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.period-card {
+    flex: 1;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--space-2);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.period-card .label {
+    font-size: 9px;
+    color: var(--text-muted);
+}
+
+.period-card .value {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+/* Legal & Org Row */
+.info-section-row {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.info-section-row .info-section {
+    flex: 1;
+}
+
+.tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin-bottom: var(--space-1);
+}
+
+.tag {
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-size: 9px;
+    font-weight: 500;
+}
+
+.tag.restriction {
+    background: #fee2e2;
+    color: var(--color-danger);
+}
+
+.tag.condition {
+    background: #dbeafe;
+    color: var(--color-info);
+}
+
+.org-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-xs);
+    padding: var(--space-1) 0;
+}
+
+.org-info .label {
+    color: var(--text-muted);
+}
+
+.org-info .value {
+    font-weight: 500;
+}
+
+/* Clause Content */
+.clause-content {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+}
+
+.overall-score {
+    margin-bottom: var(--space-4);
+}
+
+.score-bar {
+    height: 32px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.score-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.score-value {
+    position: absolute;
+    right: var(--space-2);
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: 700;
+    font-size: var(--font-size-base);
+}
+
+.score-stats {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+}
+
+.stat {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.stat.critical {
+    color: var(--color-critical);
+}
+
+.stat.danger {
+    color: var(--color-danger);
+}
+
+.stat.warning {
+    color: var(--color-warning);
+}
+
+.stat.good {
+    color: var(--color-success);
+}
+
+.clause-content h4 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    margin-bottom: var(--space-3);
+}
+
+.clause-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.clause-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.clause-header {
+    flex: 0 0 140px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.clause-id {
+    font-size: 10px;
+    color: var(--text-muted);
+    width: 32px;
+}
+
+.clause-name {
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+}
+
+.clause-tag {
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    white-space: nowrap;
+}
+
+.clause-tag.critical {
+    background: #fecaca;
+    color: var(--color-critical);
+}
+
+.clause-tag.danger {
+    background: #fee2e2;
+    color: var(--color-danger);
+}
+
+.clause-tag.warning {
+    background: #fef3c7;
+    color: var(--color-warning);
+}
+
+.clause-bar {
+    flex: 1;
+    height: 12px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.clause-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+.clause-score {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    width: 32px;
+    text-align: right;
+}
+
+/* Relation Content */
+.relation-content {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+}
+
+.relation-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.relation-group {
+    border: 2px dashed;
+    border-radius: var(--radius-lg);
+    padding: var(--space-2);
+}
+
+.relation-group.people {
+    border-color: #f87171;
+    background: #fef2f2;
+}
+
+.relation-group.assets {
+    border-color: #fbbf24;
+    background: #fffbeb;
+}
+
+.relation-group.period {
+    border-color: #818cf8;
+    background: #eef2ff;
+}
+
+.relation-group.legal {
+    border-color: #f472b6;
+    background: #fdf2f8;
+}
+
+.relation-group.org {
+    border-color: #34d399;
+    background: #ecfdf5;
+}
+
+.relation-group h4 {
+    font-size: 10px;
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+}
+
+.relation-nodes {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.relation-nodes.vertical {
+    flex-direction: column;
+}
+
+.node {
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-md);
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.node .node-label {
+    font-size: 8px;
+    opacity: 0.7;
+}
+
+.node .node-value {
+    font-weight: 600;
+}
+
+.node.landlord {
+    background: #fed7aa;
+}
+
+.node.tenant {
+    background: #fed7aa;
+}
+
+.node.location {
+    background: #fcd34d;
+}
+
+.node.building {
+    background: #fcd34d;
+}
+
+.node.deposit-node {
+    background: #fb923c;
+    color: white;
+}
+
+.node.start,
+.node.end {
+    background: #a5b4fc;
+}
+
+.node.duration {
+    background: #fbbf24;
+}
+
+.node.legal-node {
+    background: #f9a8d4;
+}
+
+.node.legal-node.warning {
+    background: #f472b6;
+    color: white;
+}
+
+.node.org-node {
+    background: #6ee7b7;
+}
+
+.relation-bottom {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.relation-bottom .relation-group {
+    flex: 1;
+}
