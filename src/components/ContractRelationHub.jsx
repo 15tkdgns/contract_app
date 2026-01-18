@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react'
 import ReactFlow, {
     Background,
     Controls,
-    MiniMap,
     useNodesState,
     useEdgesState,
     MarkerType
@@ -255,14 +254,7 @@ function ContractRelationHub({ contractData }) {
                     minZoom={0.3}
                     maxZoom={1.5}
                 >
-                    <Controls />
-                    <MiniMap
-                        nodeColor={(n) => {
-                            if (n.id.startsWith('section-')) return '#e2e8f0'
-                            return '#6366f1'
-                        }}
-                        maskColor="rgba(0,0,0,0.1)"
-                    />
+                    <Controls position="bottom-right" showInteractive={false} />
                     <Background variant="dots" gap={16} size={1} />
                 </ReactFlow>
             </div>

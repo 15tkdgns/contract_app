@@ -6,6 +6,7 @@ import ResultPage from './pages/ResultPage'
 import CalculatorPage from './pages/CalculatorPage'
 import ChecklistPage from './pages/ChecklistPage'
 import BottomNav from './components/BottomNav'
+import Chatbot from './components/Chatbot'
 import './App.css'
 
 function App() {
@@ -22,8 +23,10 @@ function App() {
                 </Routes>
             </main>
             <BottomNav />
+            <Chatbot />
         </div>
     )
 }
 
 export default App
+
