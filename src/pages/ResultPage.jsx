@@ -2,22 +2,27 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import RiskIndicator from '../components/RiskIndicator'
 import ContractVisual from '../components/ContractVisual'
-import ContractDetailView from '../components/ContractDetailView'
+import ContractRelationHub from '../components/ContractRelationHub'
 import { generatePdfReport } from '../services/pdfService'
 import './ResultPage.css'
 
 function ResultPage() {
     const navigate = useNavigate()
     const [result, setResult] = useState(null)
-    const [activeTab, setActiveTab] = useState('summary')
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
     const [showShareModal, setShowShareModal] = useState(false)
     const [copySuccess, setCopySuccess] = useState(false)
+    const [expandedSections, setExpandedSections] = useState({
+        graph: true,
+        issues: false,
+        visual: false,
+        info: false
+    })
 
     useEffect(() => {
         const analysisResult = sessionStorage.getItem('analysisResult')
         if (!analysisResult) {
-            navigate('/upload')
+            navigate('/')
             return
         }
         setResult(JSON.parse(analysisResult))
@@ -34,205 +39,165 @@ function ResultPage() {
 
     const handleNewAnalysis = () => {
         sessionStorage.removeItem('analysisResult')
-        navigate('/upload')
+        navigate('/')
     }
 
     const handleShare = () => {
-        setShowShareModal(true)
+        if (navigator.share) {
+            navigator.share({
+                title: 'Constract - 전세사기 위험도 분석',
+                text: generateShareText(),
+                url: window.location.origin
+            }).catch(() => { })
+        } else {
+            setShowShareModal(true)
+        }
     }
 
     const handleCopyLink = () => {
-        const shareText = generateShareText()
-        navigator.clipboard.writeText(shareText).then(() => {
+        navigator.clipboard.writeText(generateShareText()).then(() => {
             setCopySuccess(true)
             setTimeout(() => setCopySuccess(false), 2000)
         })
     }
 
-    const handleKakaoShare = () => {
-        const shareText = generateShareText()
-        // 카카오톡 공유 URL (모바일에서 카카오톡 앱으로 전환)
-        const kakaoUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_key=javascript_key&url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(shareText)}`
-
-        // 대안: SMS나 기본 공유 API 사용
-        if (navigator.share) {
-            navigator.share({
-                title: 'Constract - 전세사기 위험도 분석 결과',
-                text: shareText,
-                url: window.location.origin
-            }).catch(() => {
-                // 공유 취소 시 무시
-            })
-        } else {
-            // 데스크탑이나 공유 API 미지원 시
-            window.open(kakaoUrl, '_blank')
-        }
-        setShowShareModal(false)
-    }
-
     const generateShareText = () => {
         if (!result) return ''
-
         const riskLabel = getRiskLevelInfo(result.overallRiskLevel).label
-        const issueCount = result.issues?.length || 0
-
-        return `[Constract 분석 결과]
-전세사기 위험도: ${result.overallScore}점 (${riskLabel})
-발견된 위험 요소: ${issueCount}개
-
-전세 계약 전, Constract로 위험을 미리 확인하세요!
-${window.location.origin}`
+        return `[Constract] 전세사기 위험도: ${result.overallScore}점 (${riskLabel})`
     }
 
-    if (!result) {
-        return null
+    const toggleSection = (section) => {
+        setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }))
     }
+
+    if (!result) return null
 
     const getRiskLevelInfo = (level) => {
         switch (level) {
-            case 'critical':
-                return { label: '매우 위험', className: 'critical' }
-            case 'high':
-                return { label: '위험', className: 'danger' }
-            case 'medium':
-                return { label: '주의', className: 'warning' }
-            default:
-                return { label: '안전', className: 'success' }
+            case 'critical': return { label: '매우 위험', className: 'critical' }
+            case 'high': return { label: '위험', className: 'danger' }
+            case 'medium': return { label: '주의', className: 'warning' }
+            default: return { label: '안전', className: 'success' }
         }
     }
 
-    const overallRisk = getRiskLevelInfo(result.overallRiskLevel)
+    const riskInfo = getRiskLevelInfo(result.overallRiskLevel)
+    const contractData = result.contractData || result.extractedData || {}
 
     return (
-        <div className="result-page">
-            <div className="result-header">
-                <h1 className="result-title">분석 완료</h1>
-                {result.sampleName && (
-                    <span className="sample-tag">{result.sampleName}</span>
+        <div className="result-page scroll-layout">
+            {/* 헤더: 위험도 점수 */}
+            <section className="score-hero">
+                <div className={`score-badge ${riskInfo.className}`}>
+                    <span className="score-value">{result.overallScore}</span>
+                    <span className="score-label">{riskInfo.label}</span>
+                </div>
+                {result.isSample && <span className="sample-tag">예시 분석</span>}
+            </section>
+
+            {/* 섹션 1: 관계도 (React Flow) */}
+            <section className="result-section">
+                <button className="section-header" onClick={() => toggleSection('graph')}>
+                    <h2>계약 관계도</h2>
+                    <span className={`expand-icon ${expandedSections.graph ? 'open' : ''}`}>v</span>
+                </button>
+                {expandedSections.graph && (
+                    <div className="section-content graph-section">
+                        <ContractRelationHub contractData={contractData} />
+                    </div>
                 )}
-            </div>
+            </section>
 
-            {/* Overall Score */}
-            <div className="score-section">
-                <RiskIndicator score={result.overallScore} riskLevel={result.overallRiskLevel} />
-                <div className="score-info">
-                    <span className={`risk-badge badge badge-${overallRisk.className}`}>
-                        {overallRisk.label}
-                    </span>
-                    <p className="score-description">
-                        {result.overallScore >= 80 && '전반적으로 안전한 계약으로 판단됩니다.'}
-                        {result.overallScore >= 60 && result.overallScore < 80 && '일부 주의가 필요한 항목이 있습니다.'}
-                        {result.overallScore >= 40 && result.overallScore < 60 && '위험 요소가 발견되었습니다. 신중한 검토가 필요합니다.'}
-                        {result.overallScore < 40 && '심각한 위험 요소가 발견되었습니다. 계약을 재검토하세요.'}
-                    </p>
-                </div>
-            </div>
-
-            {/* Tab Navigation */}
-            <div className="result-tabs">
-                <button
-                    className={`tab-btn ${activeTab === 'summary' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('summary')}
-                >
-                    분석 요약
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'detail' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('detail')}
-                >
-                    상세 분석
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'visual' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('visual')}
-                >
-                    계약 시각화
-                </button>
-            </div>
-
-            {/* Detail Tab */}
-            {activeTab === 'detail' && (
-                <ContractDetailView data={result.contractData} />
-            )}
-
-            {/* Visual Tab */}
-            {activeTab === 'visual' && (
-                <ContractVisual data={result.contractData || {
-                    landlord: result.extractedData?.landlord || '임대인',
-                    tenant: result.extractedData?.tenant || '임차인',
-                    deposit: result.extractedData?.deposit || 200000000,
-                    marketPrice: result.extractedData?.marketPrice || 300000000,
-                    mortgageAmount: result.extractedData?.mortgageAmount || 0,
-                    contractDate: result.extractedData?.contractDate || '2026-01-15',
-                    endDate: result.extractedData?.endDate || '2028-01-14',
-                    address: result.extractedData?.address || '주소 정보 없음',
-                    hasInsurance: result.extractedData?.hasInsurance || false,
-                    isProxy: result.extractedData?.isProxy || false
-                }} />
-            )}
-
-            {/* Summary Tab - Issues */}
-            {activeTab === 'summary' && result.issues && result.issues.length > 0 && (
-                <div className="issues-section">
-                    <h2 className="section-title">발견된 위험 요소</h2>
-                    <div className="issues-list">
-                        {result.issues.map((issue, index) => {
-                            const riskInfo = getRiskLevelInfo(issue.severity)
-                            return (
-                                <div key={index} className={`issue-card issue-${riskInfo.className}`}>
-                                    <div className="issue-header">
-                                        <span className={`badge badge-${riskInfo.className}`}>
-                                            {riskInfo.label}
-                                        </span>
-                                        <h3>{issue.type}</h3>
-                                    </div>
-                                    <p className="issue-message">{issue.message}</p>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* Fraud Type Checks */}
-            {activeTab === 'summary' && (
-                <div className="checks-section">
-                    <h2 className="section-title">8가지 사기 유형 체크</h2>
-                    <div className="checks-grid">
-                        {result.fraudChecks?.map((check, index) => (
-                            <div key={index} className={`check-card ${check.passed ? 'passed' : 'failed'}`}>
-                                <div className="check-status">
-                                    {check.passed ? (
-                                        <span className="check-icon passed">V</span>
-                                    ) : (
-                                        <span className="check-icon failed">X</span>
-                                    )}
-                                </div>
-                                <div className="check-content">
-                                    <h4>{check.title}</h4>
-                                    <p>{check.description}</p>
-                                </div>
+            {/* 섹션 2: 위험 요소 */}
+            {result.issues && result.issues.length > 0 && (
+                <section className="result-section">
+                    <button className="section-header" onClick={() => toggleSection('issues')}>
+                        <h2>위험 요소 <span className="count-badge">{result.issues.length}</span></h2>
+                        <span className={`expand-icon ${expandedSections.issues ? 'open' : ''}`}>v</span>
+                    </button>
+                    {expandedSections.issues && (
+                        <div className="section-content">
+                            <div className="issues-list">
+                                {result.issues.map((issue, index) => {
+                                    const issueRisk = getRiskLevelInfo(issue.severity)
+                                    return (
+                                        <div key={index} className={`issue-card issue-${issueRisk.className}`}>
+                                            <span className={`badge badge-${issueRisk.className}`}>{issueRisk.label}</span>
+                                            <div className="issue-content">
+                                                <h4>{issue.type}</h4>
+                                                <p>{issue.message}</p>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
                             </div>
-                        ))}
+                        </div>
+                    )}
+                </section>
+            )}
+
+            {/* 섹션 3: 계약 시각화 */}
+            <section className="result-section">
+                <button className="section-header" onClick={() => toggleSection('visual')}>
+                    <h2>계약 시각화</h2>
+                    <span className={`expand-icon ${expandedSections.visual ? 'open' : ''}`}>v</span>
+                </button>
+                {expandedSections.visual && (
+                    <div className="section-content">
+                        <ContractVisual data={{
+                            landlord: contractData.landlord || '임대인',
+                            tenant: contractData.tenant || '임차인',
+                            deposit: contractData.deposit || 200000000,
+                            marketPrice: contractData.marketPrice || 300000000,
+                            mortgageAmount: contractData.mortgageAmount || 0,
+                            contractDate: contractData.startDate || '2026-01-15',
+                            endDate: contractData.endDate || '2028-01-14',
+                            address: contractData.address || '주소 정보',
+                            hasInsurance: contractData.hasInsurance || false,
+                            isProxy: contractData.isProxy || false
+                        }} />
                     </div>
-                </div>
-            )}
+                )}
+            </section>
 
-            {/* Recommendations */}
-            {activeTab === 'summary' && result.recommendations && result.recommendations.length > 0 && (
-                <div className="recommendations-section">
-                    <h2 className="section-title">권장사항</h2>
-                    <ul className="recommendations-list">
-                        {result.recommendations.map((rec, index) => (
-                            <li key={index}>{rec}</li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+            {/* 섹션 4: 계약 정보 */}
+            <section className="result-section">
+                <button className="section-header" onClick={() => toggleSection('info')}>
+                    <h2>계약 정보</h2>
+                    <span className={`expand-icon ${expandedSections.info ? 'open' : ''}`}>v</span>
+                </button>
+                {expandedSections.info && (
+                    <div className="section-content">
+                        <div className="info-grid">
+                            <div className="info-item">
+                                <span className="info-label">임대인</span>
+                                <span className="info-value">{contractData.landlord || '-'}</span>
+                            </div>
+                            <div className="info-item">
+                                <span className="info-label">임차인</span>
+                                <span className="info-value">{contractData.tenant || '-'}</span>
+                            </div>
+                            <div className="info-item">
+                                <span className="info-label">보증금</span>
+                                <span className="info-value">{contractData.deposit ? `${(contractData.deposit / 100000000).toFixed(1)}억원` : '-'}</span>
+                            </div>
+                            <div className="info-item">
+                                <span className="info-label">주소</span>
+                                <span className="info-value">{contractData.address || '-'}</span>
+                            </div>
+                            <div className="info-item">
+                                <span className="info-label">계약기간</span>
+                                <span className="info-value">{contractData.startDate} ~ {contractData.endDate}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </section>
 
-            {/* 다음 단계 액션 카드 */}
-            <div className="next-steps-section">
-                <h2 className="section-title">다음 단계</h2>
+            {/* 섹션 5: 다음 단계 */}
+            <section className="next-steps-section">
+                <h2>다음 단계</h2>
                 <div className="action-cards">
                     <div className="action-card" onClick={() => navigate('/checklist')}>
                         <div className="action-icon checklist">
@@ -243,7 +208,7 @@ ${window.location.origin}`
                         </div>
                         <div className="action-text">
                             <h4>체크리스트</h4>
-                            <p>계약 전 필수 확인사항</p>
+                            <p>계약 전 필수 확인</p>
                         </div>
                     </div>
                     <div className="action-card" onClick={() => navigate('/calculator')}>
@@ -251,9 +216,6 @@ ${window.location.origin}`
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <rect x="4" y="2" width="16" height="20" rx="2" />
                                 <line x1="8" y1="6" x2="16" y2="6" />
-                                <line x1="8" y1="10" x2="8" y2="10.01" />
-                                <line x1="12" y1="10" x2="12" y2="10.01" />
-                                <line x1="16" y1="10" x2="16" y2="10.01" />
                             </svg>
                         </div>
                         <div className="action-text">
@@ -262,55 +224,34 @@ ${window.location.origin}`
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            {/* Actions */}
-            <div className="result-actions">
+            {/* 하단 액션 */}
+            <section className="result-actions">
                 <div className="action-row">
-                    <button
-                        className="btn btn-primary"
-                        onClick={handleDownloadPdf}
-                        disabled={isGeneratingPdf}
-                    >
+                    <button className="btn btn-primary" onClick={handleDownloadPdf} disabled={isGeneratingPdf}>
                         {isGeneratingPdf ? '생성 중...' : 'PDF 리포트'}
                     </button>
-                    <button className="btn btn-secondary" onClick={handleShare}>
-                        공유하기
-                    </button>
+                    <button className="btn btn-secondary" onClick={handleShare}>공유</button>
                 </div>
-                <button className="btn btn-secondary btn-lg" onClick={handleNewAnalysis}>
-                    새 문서 분석
-                </button>
-            </div>
+                <button className="btn btn-secondary btn-lg" onClick={handleNewAnalysis}>새 분석</button>
+            </section>
 
-            {/* Share Modal */}
+            {/* 공유 모달 */}
             {showShareModal && (
                 <div className="share-modal-overlay" onClick={() => setShowShareModal(false)}>
                     <div className="share-modal" onClick={e => e.stopPropagation()}>
                         <h3>분석 결과 공유</h3>
-                        <div className="share-buttons">
-                            <button className="share-btn copy" onClick={handleCopyLink}>
-                                <span className="share-icon">C</span>
-                                <span>{copySuccess ? '복사됨!' : '텍스트 복사'}</span>
-                            </button>
-                            <button className="share-btn kakao" onClick={handleKakaoShare}>
-                                <span className="share-icon">K</span>
-                                <span>공유하기</span>
-                            </button>
-                        </div>
-                        <button className="btn btn-secondary" onClick={() => setShowShareModal(false)}>
-                            닫기
+                        <button className="share-btn" onClick={handleCopyLink}>
+                            {copySuccess ? '복사됨!' : '텍스트 복사'}
                         </button>
+                        <button className="btn btn-secondary" onClick={() => setShowShareModal(false)}>닫기</button>
                     </div>
                 </div>
             )}
 
-            {/* Privacy Reminder */}
             <div className="privacy-reminder">
-                <p>
-                    브라우저를 닫거나 새로고침하면 모든 데이터가 삭제됩니다.
-                    필요한 경우 PDF를 먼저 다운로드해주세요.
-                </p>
+                <p>브라우저 종료 시 모든 데이터가 삭제됩니다.</p>
             </div>
         </div>
     )

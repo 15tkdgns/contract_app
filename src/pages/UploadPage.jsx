@@ -119,7 +119,7 @@ function UploadPage() {
     }
 
     const riskPreview = getRiskPreview()
-    const canStartAnalysis = contractFile && !isLoading
+    const canStartAnalysis = (contractFile || showSampleBuilder) && !isLoading
 
     return (
         <div className="upload-page">
@@ -225,9 +225,14 @@ function UploadPage() {
                             <span className="risk-label" style={{ color: riskPreview.color }}>{riskPreview.label}</span>
                         </div>
 
-                        <button className="btn btn-primary btn-lg" onClick={handleShowPreview}>
-                            계약서 미리보기
-                        </button>
+                        <div className="sample-actions">
+                            <button className="btn btn-secondary" onClick={handleShowPreview}>
+                                미리보기
+                            </button>
+                            <button className="btn btn-primary" onClick={handleStartSampleAnalysis}>
+                                분석 시작
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
@@ -271,7 +276,7 @@ function UploadPage() {
             <div className="upload-actions">
                 <button
                     className={`btn btn-primary btn-lg ${!canStartAnalysis ? 'disabled' : ''}`}
-                    onClick={handleStartAnalysis}
+                    onClick={showSampleBuilder ? handleStartSampleAnalysis : handleStartAnalysis}
                     disabled={!canStartAnalysis}
                 >
                     {isLoading ? '준비 중...' : '분석 시작'}
