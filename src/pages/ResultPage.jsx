@@ -129,6 +129,27 @@ function ResultPage() {
                     </button>
                     {expandedSections.issues && (
                         <div className="section-content">
+                            {/* 사기 패턴 경고 */}
+                            {result.matchedPatterns && result.matchedPatterns.length > 0 && (
+                                <div className="fraud-warning-box">
+                                    <div className="fraud-warning-header">
+                                        <span className="warning-icon">🚨</span>
+                                        <h3>전세사기 위험 패턴 감지</h3>
+                                    </div>
+                                    <div className="fraud-patterns-list">
+                                        {result.matchedPatterns.map((pattern, idx) => (
+                                            <div key={idx} className="fraud-pattern-item">
+                                                <span className="pattern-name">{pattern.name}</span>
+                                                <p className="pattern-reason">{pattern.reason}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="warning-footer">
+                                        <p>※ 위 패턴은 AI 분석 결과이며, 실제 사실과 다를 수 있습니다. 반드시 전문 법률 상담을 받아보세요.</p>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="issues-list">
                                 {result.issues.map((issue, index) => {
                                     const issueRisk = getRiskLevelInfo(issue.severity)

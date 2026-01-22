@@ -1,3 +1,5 @@
+import fraudPatterns from '../data/fraudPatterns.json'
+
 /**
  * AI Service - OpenAI API 통합
  * Vision API (OCR) 및 Chat API (분석) 기능 제공
@@ -76,10 +78,17 @@ export async function extractTextWithVision(imageData) {
  * @param {string} registryText - 등기부등본 텍스트 (선택)
  * @returns {Promise<Object>} 분석 결과
  */
+
+
 export async function analyzeContractWithAI(contractText, registryText = '') {
     if (!API_KEY) {
         throw new Error('API 키가 설정되지 않았습니다.')
     }
+
+    // 패턴 설명 텍스트 생성
+    const patternsDescription = fraudPatterns.map(p =>
+        `- ${p.name} (${p.id}): ${p.description}\n  징후: ${p.indicators.join(', ')}`
+    ).join('\n\n')
 
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -95,6 +104,9 @@ export async function analyzeContractWithAI(contractText, registryText = '') {
                         role: 'system',
                         content: `당신은 전세사기 위험 분석 전문가입니다.
 계약서와 등기부등본을 분석하여 위험 요소를 찾아주세요.
+
+특히 다음 사기 패턴과 일치하는지 면밀히 검토하세요:
+${patternsDescription}
 
 다음 JSON 형식으로 응답하세요:
 {
@@ -121,6 +133,9 @@ export async function analyzeContractWithAI(contractText, registryText = '') {
         "addressMatch": { "status": "match|mismatch|unknown", "contractValue": "계약서상 주소", "registryValue": "등기부상 주소", "message": "불일치 시 설명" },
         "areaMatch": { "status": "match|mismatch|unknown", "contractValue": "계약서상 면적", "registryValue": "등기부상 면적", "message": "불일치 시 설명" }
     },
+    "matchedPatterns": [
+        { "id": "패턴ID (위 목록 참조)", "name": "패턴이름", "confidence": "high|medium|low", "reason": "매칭 이유 설명" }
+    ],
     "riskScore": 0-100 (높을수록 위험),
     "issues": [
         {
@@ -146,6 +161,9 @@ export async function analyzeContractWithAI(contractText, registryText = '') {
     ],
     "recommendations": ["권장사항1", "권장사항2"]
 }
+
+matchedPatterns 예시:
+- { "id": "gap_investment", "name": "무자본 갭투자", "confidence": "high", "reason": "매매가 대비 전세가율이 90%로 매우 높음" }
 
 entities 예시:
 - { "id": "landlord", "type": "person", "name": "임대인", "value": "홍길동" }
