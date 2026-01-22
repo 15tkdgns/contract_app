@@ -4,6 +4,54 @@
     overflow: hidden;
 }
 
+/* Graph Header */
+.graph-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+}
+
+.graph-title {
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+
+.graph-badge {
+    padding: 2px 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-full);
+    font-size: 10px;
+    color: white;
+    font-weight: 600;
+}
+
+/* KB Node Styles */
+.kb-node {
+    padding: 8px 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 100px;
+}
+
+.kb-node-type {
+    font-size: 9px;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kb-node-value {
+    font-size: 11px;
+    font-weight: 600;
+    word-break: keep-all;
+}
+
 .graph-controls {
     display: flex;
     align-items: center;

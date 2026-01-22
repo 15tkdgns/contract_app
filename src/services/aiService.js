@@ -110,6 +110,12 @@ export async function analyzeContractWithAI(contractText, registryText = '') {
         "hasInsurance": 보증보험여부(boolean),
         "isProxy": 대리인계약여부(boolean)
     },
+    "entities": [
+        { "id": "고유ID", "type": "person|organization|asset|money|date|location", "name": "표시이름", "value": "실제값" }
+    ],
+    "relations": [
+        { "source": "엔티티ID", "target": "엔티티ID", "type": "owns|pays|receives|resides|guarantees|mediates", "label": "관계설명" }
+    ],
     "riskScore": 0-100 (높을수록 위험),
     "issues": [
         {
@@ -125,7 +131,16 @@ export async function analyzeContractWithAI(contractText, registryText = '') {
         "근저당과다": { "detected": boolean, "score": 0-100 }
     },
     "recommendations": ["권장사항1", "권장사항2"]
-}`
+}
+
+entities 예시:
+- { "id": "landlord", "type": "person", "name": "임대인", "value": "홍길동" }
+- { "id": "deposit", "type": "money", "name": "보증금", "value": "2억원" }
+- { "id": "property", "type": "asset", "name": "부동산", "value": "강남구 테헤란로 123" }
+
+relations 예시:
+- { "source": "landlord", "target": "property", "type": "owns", "label": "소유" }
+- { "source": "tenant", "target": "deposit", "type": "pays", "label": "지급" }`
                     },
                     {
                         role: 'user',

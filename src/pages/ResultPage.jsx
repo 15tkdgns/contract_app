@@ -111,7 +111,11 @@ function ResultPage() {
                 </button>
                 {expandedSections.graph && (
                     <div className="section-content graph-section">
-                        <ContractRelationHub contractData={contractData} />
+                        <ContractRelationHub
+                            contractData={contractData}
+                            entities={result.entities}
+                            relations={result.relations}
+                        />
                     </div>
                 )}
             </section>
