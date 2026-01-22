@@ -116,6 +116,11 @@ export async function analyzeContractWithAI(contractText, registryText = '') {
     "relations": [
         { "source": "엔티티ID", "target": "엔티티ID", "type": "owns|pays|receives|resides|guarantees|mediates", "label": "관계설명" }
     ],
+    "documentVerification": {
+        "ownerMatch": { "status": "match|mismatch|unknown", "contractValue": "계약서상 임대인", "registryValue": "등기부상 소유자", "message": "불일치 시 설명" },
+        "addressMatch": { "status": "match|mismatch|unknown", "contractValue": "계약서상 주소", "registryValue": "등기부상 주소", "message": "불일치 시 설명" },
+        "areaMatch": { "status": "match|mismatch|unknown", "contractValue": "계약서상 면적", "registryValue": "등기부상 면적", "message": "불일치 시 설명" }
+    },
     "riskScore": 0-100 (높을수록 위험),
     "issues": [
         {
@@ -130,6 +135,15 @@ export async function analyzeContractWithAI(contractText, registryText = '') {
         "위장임대인": { "detected": boolean, "score": 0-100 },
         "근저당과다": { "detected": boolean, "score": 0-100 }
     },
+    "personalizedGuide": {
+        "checklist": ["확인1", "확인2", "확인3"],
+        "warnings": ["주의사항1", "주의사항2"],
+        "nextSteps": ["다음단계1", "다음단계2"]
+    },
+    "glossary": [
+        { "term": "근저당", "definition": "부동산을 담보로 대출받을 때 설정하는 권리" },
+        { "term": "전세권", "definition": "전세금을 지급하고 부동산을 사용할 수 있는 권리" }
+    ],
     "recommendations": ["권장사항1", "권장사항2"]
 }
 
@@ -140,7 +154,11 @@ entities 예시:
 
 relations 예시:
 - { "source": "landlord", "target": "property", "type": "owns", "label": "소유" }
-- { "source": "tenant", "target": "deposit", "type": "pays", "label": "지급" }`
+- { "source": "tenant", "target": "deposit", "type": "pays", "label": "지급" }
+
+documentVerification: 계약서와 등기부등본의 핵심 정보가 일치하는지 자동 검증
+personalizedGuide: 분석 결과에 따른 맞춤형 체크리스트, 주의사항, 다음 단계 제안
+glossary: 문서에서 발견된 어려운 법률/부동산 용어에 대한 쉬운 설명`
                     },
                     {
                         role: 'user',

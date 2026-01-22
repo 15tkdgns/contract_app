@@ -206,7 +206,102 @@ function ResultPage() {
                 )}
             </section>
 
-            {/* 섹션 5: 다음 단계 */}
+            {/* 섹션 5: 문서 검증 결과 (AI) */}
+            {result.documentVerification && (
+                <section className="result-section verification-section">
+                    <div className="section-header-static">
+                        <h2>문서 교차 검증</h2>
+                        <span className="ai-badge">AI 자동검증</span>
+                    </div>
+                    <div className="section-content">
+                        <div className="verification-grid">
+                            {Object.entries(result.documentVerification).map(([key, value]) => (
+                                <div key={key} className={`verification-item ${value.status}`}>
+                                    <div className="verification-icon">
+                                        {value.status === 'match' ? '✓' : value.status === 'mismatch' ? '✗' : '?'}
+                                    </div>
+                                    <div className="verification-content">
+                                        <span className="verification-label">
+                                            {key === 'ownerMatch' ? '소유자 일치' :
+                                                key === 'addressMatch' ? '주소 일치' : '면적 일치'}
+                                        </span>
+                                        {value.status !== 'unknown' && (
+                                            <div className="verification-values">
+                                                <span>계약서: {value.contractValue || '-'}</span>
+                                                <span>등기부: {value.registryValue || '-'}</span>
+                                            </div>
+                                        )}
+                                        {value.message && <p className="verification-message">{value.message}</p>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* 섹션 6: 맞춤형 가이드 (AI) */}
+            {result.personalizedGuide && (
+                <section className="result-section guide-section">
+                    <div className="section-header-static">
+                        <h2>맞춤형 가이드</h2>
+                        <span className="ai-badge">AI 추천</span>
+                    </div>
+                    <div className="section-content">
+                        {result.personalizedGuide.warnings?.length > 0 && (
+                            <div className="guide-block warnings">
+                                <h4>주의사항</h4>
+                                <ul>
+                                    {result.personalizedGuide.warnings.map((item, idx) => (
+                                        <li key={idx}>{item}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                        {result.personalizedGuide.checklist?.length > 0 && (
+                            <div className="guide-block checklist">
+                                <h4>확인 체크리스트</h4>
+                                <ul>
+                                    {result.personalizedGuide.checklist.map((item, idx) => (
+                                        <li key={idx}>{item}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                        {result.personalizedGuide.nextSteps?.length > 0 && (
+                            <div className="guide-block next-steps">
+                                <h4>다음 단계</h4>
+                                <ul>
+                                    {result.personalizedGuide.nextSteps.map((item, idx) => (
+                                        <li key={idx}>{item}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                </section>
+            )}
+
+            {/* 섹션 7: 용어 사전 (AI) */}
+            {result.glossary && result.glossary.length > 0 && (
+                <section className="result-section glossary-section">
+                    <div className="section-header-static">
+                        <h2>용어 해설</h2>
+                    </div>
+                    <div className="section-content">
+                        <div className="glossary-list">
+                            {result.glossary.map((item, idx) => (
+                                <div key={idx} className="glossary-item">
+                                    <span className="glossary-term">{item.term}</span>
+                                    <span className="glossary-definition">{item.definition}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* 섹션 8: 다음 단계 */}
             <section className="next-steps-section">
                 <h2>다음 단계</h2>
                 <div className="action-cards">
