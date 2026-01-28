@@ -7,24 +7,27 @@ import CalculatorPage from './pages/CalculatorPage'
 import ChecklistPage from './pages/ChecklistPage'
 import BottomNav from './components/BottomNav'
 import Chatbot from './components/Chatbot'
+import { ChatProvider } from './context/ChatContext'
 import './App.css'
 
 function App() {
     return (
-        <div className="app">
-            <main className="main-content">
-                <Routes>
-                    <Route path="/" element={<UploadPage />} />
-                    <Route path="/manual" element={<ManualInputPage />} />
-                    <Route path="/analysis" element={<AnalysisPage />} />
-                    <Route path="/result" element={<ResultPage />} />
-                    <Route path="/calculator" element={<CalculatorPage />} />
-                    <Route path="/checklist" element={<ChecklistPage />} />
-                </Routes>
-            </main>
-            <BottomNav />
-            <Chatbot />
-        </div>
+        <ChatProvider>
+            <div className="app">
+                <main className="main-content">
+                    <Routes>
+                        <Route path="/" element={<UploadPage />} />
+                        <Route path="/manual" element={<ManualInputPage />} />
+                        <Route path="/analysis" element={<AnalysisPage />} />
+                        <Route path="/result" element={<ResultPage />} />
+                        <Route path="/calculator" element={<CalculatorPage />} />
+                        <Route path="/checklist" element={<ChecklistPage />} />
+                    </Routes>
+                </main>
+                <BottomNav />
+                <Chatbot />
+            </div>
+        </ChatProvider>
     )
 }
 

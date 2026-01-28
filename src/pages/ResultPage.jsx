@@ -1,18 +1,22 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import RiskIndicator from '../components/RiskIndicator'
+import { useState, useEffect, useRef } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import ContractVisual from '../components/ContractVisual'
 import ContractRelationHub from '../components/ContractRelationHub'
 import { generatePdfReport } from '../services/pdfService'
 import { saveHistory } from '../services/historyService'
+import { useChat } from '../context/ChatContext'
 import './ResultPage.css'
 
 function ResultPage() {
+    const location = useLocation()
     const navigate = useNavigate()
+    const { updateContextData, openChat, addMessage } = useChat()
     const [result, setResult] = useState(null)
-    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+    const [activeTab, setActiveTab] = useState('summary')
     const [showShareModal, setShowShareModal] = useState(false)
     const [copySuccess, setCopySuccess] = useState(false)
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+    const hasNotifiedChat = useRef(false) // 챗봇 알림 중복 방지
     const [expandedSections, setExpandedSections] = useState({
         graph: true,
         issues: false,
@@ -20,20 +24,43 @@ function ResultPage() {
         info: false
     })
 
+    // 데이터 로드
     useEffect(() => {
-        const analysisResult = sessionStorage.getItem('analysisResult')
-        if (!analysisResult) {
-            navigate('/')
+        if (location.state?.result) {
+            setResult(location.state.result)
+            if (!location.state.result.isSample) {
+                saveHistory(location.state.result)
+            }
             return
         }
-        const parsedResult = JSON.parse(analysisResult)
-        setResult(parsedResult)
 
-        // 이력 저장 (샘플 분석이 아닌 경우에만 저장)
-        if (!parsedResult.isSample) {
-            saveHistory(parsedResult)
+        const analysisResult = sessionStorage.getItem('analysisResult')
+        if (analysisResult) {
+            const parsed = JSON.parse(analysisResult)
+            setResult(parsed)
+            if (!parsed.isSample) {
+                saveHistory(parsed)
+            }
+        } else {
+            navigate('/')
         }
-    }, [navigate])
+    }, [location.state, navigate])
+
+    // 챗봇 연동
+    useEffect(() => {
+        if (result && !hasNotifiedChat.current) {
+            updateContextData(result)
+            hasNotifiedChat.current = true
+
+            setTimeout(() => {
+                openChat()
+                addMessage({
+                    role: 'bot',
+                    content: `분석이 완료되었습니다! 🏠\n\n계약서와 등기부등본 분석 내용을 확인했습니다. 궁금한 점이 있으시면 언제든지 물어봐주세요.`
+                })
+            }, 800)
+        }
+    }, [result, updateContextData, openChat, addMessage])
 
     const handleDownloadPdf = async () => {
         setIsGeneratingPdf(true)

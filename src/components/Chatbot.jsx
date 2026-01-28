@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
+import { useChat } from '../context/ChatContext'
 import './Chatbot.css'
 
 const SYSTEM_PROMPT = `당신은 전세사기 예방을 도와주는 전문 상담사입니다.
@@ -19,17 +20,24 @@ const SUGGESTED_QUESTIONS = [
 ]
 
 function Chatbot() {
-    const [isOpen, setIsOpen] = useState(false)
-    const [messages, setMessages] = useState([
-        { role: 'bot', content: GREETING }
-    ])
+    const {
+        messages, setMessages, isOpen, toggleChat, closeChat,
+        contextData, isLoading, setIsLoading
+    } = useChat()
+
     const [input, setInput] = useState('')
-    const [isLoading, setIsLoading] = useState(false)
     const messagesEndRef = useRef(null)
+
+    // 초기 인사말
+    useEffect(() => {
+        if (messages.length === 0) {
+            setMessages([{ role: 'bot', content: GREETING }])
+        }
+    }, [messages.length, setMessages])
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [messages])
+    }, [messages, isOpen])
 
     // 직접 OpenAI API 호출
     const callOpenAI = async (message, history) => {
@@ -40,8 +48,14 @@ function Chatbot() {
         }
 
         try {
+            // 컨텍스트 데이터가 있으면 프롬프트에 포함
+            let systemContent = SYSTEM_PROMPT
+            if (contextData) {
+                systemContent += `\n\n[현재 사용자가 보고 있는 분석 결과]\n${JSON.stringify(contextData, null, 2)}\n\n위 분석 결과를 바탕으로 구체적으로 조언해주세요. 사용자가 "내 계약서 어때?"라고 물으면 위 데이터를 기반으로 답변하세요.`
+            }
+
             const apiMessages = [
-                { role: 'system', content: SYSTEM_PROMPT },
+                { role: 'system', content: systemContent },
                 ...history.slice(1).map(msg => ({
                     role: msg.role === 'bot' ? 'assistant' : 'user',
                     content: msg.content
@@ -112,7 +126,7 @@ function Chatbot() {
 
     return (
         <>
-            <button className="chatbot-fab" onClick={() => setIsOpen(!isOpen)}>
+            <button className="chatbot-fab" onClick={toggleChat}>
                 {isOpen ? (
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M18 6L6 18M6 6l12 12" />
@@ -128,7 +142,7 @@ function Chatbot() {
                 <div className="chatbot-window">
                     <div className="chatbot-header">
                         <span>전세사기 도우미</span>
-                        <button className="close-btn" onClick={() => setIsOpen(false)}>X</button>
+                        <button className="close-btn" onClick={closeChat}>X</button>
                     </div>
 
                     <div className="chatbot-messages">
