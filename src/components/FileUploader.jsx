@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import './FileUploader.css'
 
 function FileUploader({ label, accept, file, onFileSelect, onFileRemove }) {
