@@ -375,7 +375,7 @@ function ResultPage() {
                 {activeTab === 'contract' && (
                     <div className="tab-pane fade-in no-padding">
                         <ContractViewer
-                            text={result.ocrText}
+                            text={result.contractText}
                             analysis={result.clauseAnalysis || []}
                         />
                     </div>

@@ -109,9 +109,11 @@ export async function fetchMarketPrice(address, deposit, targetArea = 0) {
         const targetAreaNum = parseFloat(targetArea) || 20 // 원룸의 경우 기본값 20제곱미터 가정
 
         // 주소 키워드에 따른 빌딩 타입 추정
-        let buildingType = 'APT'
-        if (address.includes('오피스텔')) buildingType = 'OFFI'
-        else if (address.includes('빌라') || address.includes('다세대') || address.includes('연립')) buildingType = 'RH'
+        let buildingType = 'RH' // 기본값을 RH로 변경 (원룸, 다세대 등이 더 많음)
+        if (address.includes('아파트') || address.includes('APT')) buildingType = 'APT'
+        else if (address.includes('오피스텔')) buildingType = 'OFFI'
+        else if (address.includes('원룸') || address.includes('빌라') || address.includes('다세대') ||
+            address.includes('연립') || address.includes('다가구') || address.includes('도시형생활')) buildingType = 'RH'
 
         // API 엔드포인트 매핑
         const endpoints = {

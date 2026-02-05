@@ -50,7 +50,7 @@ function FullContractPage() {
                     {/* Reuse ContractViewer but ensure it takes full height */}
                     <div className="full-screen-wrapper" style={{ height: '100%' }}>
                         <ContractViewer
-                            text={result.ocrText}
+                            text={result.contractText}
                             analysis={result.clauseAnalysis || []}
                         />
                     </div>

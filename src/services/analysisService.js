@@ -69,17 +69,39 @@ const FRAUD_TYPES = [
  * 전용 분석 함수 - 리액트 컴포넌트에서 호출
  */
 export async function analyzeDocuments(contractText, registryText, stage = 'pre') {
+    console.log('[Analysis Service] 분석 시작')
+    console.log('[Analysis Service] 계약서 텍스트 길이:', contractText?.length || 0)
+    console.log('[Analysis Service] 등기부 텍스트 길이:', registryText?.length || 0)
+    console.log('[Analysis Service] 분석 단계:', stage)
+    console.log('[Analysis Service] API 키 존재:', hasApiKey())
+
     if (hasApiKey()) {
+        console.log('[Analysis Service] AI 분석 시도')
         try {
             const aiResult = await analyzeContractWithAI(contractText, registryText, stage)
+            console.log('[Analysis Service] AI 분석 결과:', aiResult ? 'success' : 'null')
+            console.log('[Analysis Service] AI riskScore:', aiResult?.riskScore)
+
             if (aiResult && aiResult.riskScore !== undefined) {
-                return formatAIResult(aiResult)
+                console.log('[Analysis Service] AI 결과 포맷팅 후 반환')
+                const formatted = formatAIResult(aiResult)
+                console.log('[Analysis Service] 포맷된 결과 점수:', formatted.overallScore)
+                return formatted
+            } else {
+                console.warn('[Analysis Service] AI 결과가 유효하지 않음, riskScore 누락')
             }
         } catch (error) {
-            console.warn('AI 분석 실패, 규칙 기반으로 전환:', error)
+            console.warn('[Analysis Service] AI 분석 실패, 규칙 기반으로 전환:', error.message)
+            console.error('[Analysis Service] 오류 상세:', error)
         }
+    } else {
+        console.log('[Analysis Service] API 키 없음, 규칙 기반 분석 진행')
     }
-    return analyzeWithRules(contractText, registryText)
+
+    console.log('[Analysis Service] 규칙 기반 분석 시작')
+    const result = analyzeWithRules(contractText, registryText)
+    console.log('[Analysis Service] 규칙 기반 분석 완료, 점수:', result.overallScore)
+    return result
 }
 
 function formatAIResult(aiResult) {
@@ -113,6 +135,7 @@ function formatAIResult(aiResult) {
             owner_match: "분석 중",
             special_terms_check: "분석 중"
         },
+        clauseAnalysis: aiResult.clauseAnalysis || [],
         aiGenerated: true
     }
 }

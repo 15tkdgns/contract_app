@@ -93,6 +93,7 @@ function AnalysisPage() {
 
     const startAnalysis = async () => {
         try {
+            console.log('[AnalysisPage] 분석 시작')
             setCurrentStep(0)
             setStatusMessage('업로드된 문서를 로드하는 중...')
 
@@ -101,19 +102,29 @@ function AnalysisPage() {
             // 2. sessionStorage에서 데이터 확인 (이미지 Base64)
             const sessionData = sessionStorage.getItem('analysisData')
 
+            console.log('[AnalysisPage] location.state 존재:', !!stateData)
+            console.log('[AnalysisPage] sessionStorage 존재:', !!sessionData)
+
             let contractData, registryData
             let hasRegistryDoc = false
 
             if (stateData && stateData.contractFile) {
+                console.log('[AnalysisPage] location.state에서 파일 로드')
                 contractData = stateData.contractFile
                 registryData = stateData.registryFile
                 hasRegistryDoc = !!registryData
+                console.log('[AnalysisPage] contractFile 타입:', contractData?.type || typeof contractData)
+                console.log('[AnalysisPage] contractFile instanceof File:', contractData instanceof File)
             } else if (sessionData) {
+                console.log('[AnalysisPage] sessionStorage에서 데이터 로드')
                 const parsed = JSON.parse(sessionData)
-                contractData = parsed.contract.data
-                registryData = parsed.registry ? parsed.registry.data : null
+                console.log('[AnalysisPage] parsed 구조:', Object.keys(parsed))
+                contractData = parsed.contract?.data
+                registryData = parsed.registry?.data
                 hasRegistryDoc = !!registryData
+                console.log('[AnalysisPage] contractData 길이:', contractData?.length || 0)
             } else {
+                console.error('[AnalysisPage] 분석할 문서가 없습니다.')
                 throw new Error('분석할 문서가 없습니다. 문서를 다시 업로드해주세요.')
             }
 
@@ -121,6 +132,7 @@ function AnalysisPage() {
             const stage = (stateData && stateData.stage) ||
                 (sessionData && JSON.parse(sessionData).stage) ||
                 'pre'
+            console.log('[AnalysisPage] 분석 단계:', stage)
 
             setHasRegistry(hasRegistryDoc)
             await delay(500)
@@ -130,19 +142,26 @@ function AnalysisPage() {
             setStatusMessage('계약서에서 텍스트를 추출하는 중...')
 
             let contractText = ''
+            console.log('[AnalysisPage] OCR 시작, 데이터 타입:', typeof contractData)
+
             // PDF 파일 객체인 경우
             if (contractData instanceof File && contractData.type === 'application/pdf') {
+                console.log('[AnalysisPage] PDF 파일 OCR 진행')
                 contractText = await extractTextFromPdf(
                     contractData,
                     (progress) => setOcrProgress(progress.progress * 100)
                 )
             } else {
+                console.log('[AnalysisPage] 이미지 OCR 진행')
                 // 이미지 데이터 (Base64) 또는 이미지 파일 객체
                 contractText = await extractTextFromImage(
                     contractData,
                     (progress) => setOcrProgress(progress.progress * 100)
                 )
             }
+
+            console.log('[AnalysisPage] 계약서 OCR 완료, 텍스트 길이:', contractText?.length || 0)
+            console.log('[AnalysisPage] 계약서 텍스트 미리보기:', contractText?.substring(0, 200))
 
             let registryText = ''
 
@@ -187,7 +206,9 @@ function AnalysisPage() {
 
             sessionStorage.setItem('analysisResult', JSON.stringify({
                 ...analysisResult,
-                stage: stage
+                stage: stage,
+                contractText: contractText,  // OCR 추출 텍스트 추가
+                registryText: registryText    // 등기부 텍스트 추가
             }))
             sessionStorage.removeItem('analysisData')
 

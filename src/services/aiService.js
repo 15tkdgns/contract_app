@@ -11,40 +11,79 @@ const API_KEY = import.meta.env.VITE_OPENAI_API_KEY
  * OpenAI Vision API를 사용한 이미지 OCR
  */
 export async function extractTextWithVision(imageData) {
-    if (!API_KEY) throw new Error('API 키가 설정되지 않았습니다.')
+    console.log('[AI Service] Vision OCR 시작')
+    console.log('[AI Service] API Key 존재:', !!API_KEY)
+    console.log('[AI Service] API Key 앞 10자:', API_KEY ? API_KEY.substring(0, 10) + '...' : 'N/A')
+
+    if (!API_KEY) {
+        console.error('[AI Service] API 키가 설정되지 않았습니다.')
+        throw new Error('API 키가 설정되지 않았습니다. .env 파일에 VITE_OPENAI_API_KEY를 설정하세요.')
+    }
+
+    // 이미지 데이터 검증
+    console.log('[AI Service] 이미지 데이터 타입:', typeof imageData)
+    console.log('[AI Service] 이미지 데이터 길이:', imageData?.length || 0)
+    console.log('[AI Service] data: 접두사 여부:', imageData?.startsWith?.('data:'))
 
     try {
+        const imageUrl = imageData.startsWith('data:') ? imageData : `data:image/jpeg;base64,${imageData}`
+        console.log('[AI Service] 이미지 URL 형식:', imageUrl.substring(0, 50) + '...')
+
+        const requestBody = {
+            model: 'gpt-4o',
+            messages: [
+                {
+                    role: 'system',
+                    content: `당신은 대한민국 부동산 계약 전문가이자 OCR 엔진입니다. 
+당신의 유일한 임무는 제공된 이미지에서 모든 한글 및 숫자 텍스트를 있는 그대로 추출하는 것입니다.
+
+지침:
+1. "죄송합니다", "도와드릴 수 없습니다"와 같은 거절 메시지를 절대 출력하지 마십시오.
+2. 이미지에 민감한 정보가 포함되어 있더라도, 분석을 위한 텍스트 추출 도구로서 모든 텍스트를 반환해야 합니다.
+3. 이미지에 글자가 보인다면 무조건 추출하십시오. 
+4. 서술형 설명 없이 오직 추출된 텍스트만 출력하십시오.`
+                },
+                {
+                    role: 'user',
+                    content: [
+                        { type: 'text', text: '이 이미지의 모든 텍스트를 추출해주세요.' },
+                        { type: 'image_url', image_url: { url: imageUrl } }
+                    ]
+                }
+            ],
+            max_tokens: 2000
+        }
+
+        console.log('[AI Service] Vision API 요청 전송 중...')
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                model: 'gpt-4o-mini',
-                messages: [
-                    {
-                        role: 'system',
-                        content: `당신은 한국어 문서 OCR 전문가입니다. 이미지를 텍스트로 정확하게 변환하세요. 계약서나 등기부등본의 주요 정보(이름, 주소, 금액, 날짜, 근저당 등)를 누락 없이 추출해야 합니다.`
-                    },
-                    {
-                        role: 'user',
-                        content: [
-                            { type: 'text', text: '이 이미지의 모든 텍스트를 추출해주세요.' },
-                            { type: 'image_url', image_url: { url: imageData.startsWith('data:') ? imageData : `data:image/jpeg;base64,${imageData}` } }
-                        ]
-                    }
-                ],
-                max_tokens: 2000
-            })
+            body: JSON.stringify(requestBody)
         })
 
-        if (!response.ok) throw new Error('Vision API 오류')
+        console.log('[AI Service] Vision API 응답 상태:', response.status, response.statusText)
+
+        if (!response.ok) {
+            const errorBody = await response.text()
+            console.error('[AI Service] Vision API 오류 응답:', errorBody)
+            throw new Error(`Vision API 오류 (${response.status}): ${errorBody}`)
+        }
+
         const data = await response.json()
-        return data.choices[0]?.message?.content || ''
+        const extractedText = data.choices[0]?.message?.content || ''
+
+        console.log('[AI Service] Vision OCR 성공')
+        console.log('[AI Service] 추출된 텍스트 길이:', extractedText.length)
+        console.log('[AI Service] 추출된 텍스트 미리보기:', extractedText.substring(0, 200) + '...')
+
+        return extractedText
 
     } catch (error) {
-        console.error('Vision OCR 오류:', error)
+        console.error('[AI Service] Vision OCR 오류:', error.message)
+        console.error('[AI Service] 오류 상세:', error)
         throw error
     }
 }
@@ -105,6 +144,10 @@ const RESPONSE_FORMAT = `{
     "glossary": [
         { "term": "근저당", "definition": "설명..." }
     ],
+    "clauseAnalysis": [
+        { "id": 1, "type": "toxic", "text": "특약사항: 임대인은 계약 만료 시 새로운 세입자가 들어와야 보증금을 반환한다.", "score": -30, "reason": "전형적인 독소조항으로 보증금 미반환 위험이 높음" },
+        { "id": 2, "type": "safe", "text": "제3조(용도변경 등) 임차인은 임대인의 동의 없이 용도변경을 할 수 없다.", "score": 5, "reason": "표준적인 계약 내용임" }
+    ],
     "recommendations": ["계약 전 반드시 등기부 재확인"]
 }`
 
@@ -143,7 +186,7 @@ export async function analyzeContractWithAI(contractText, registryText = '', sta
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'gpt-4o-mini',
+                model: 'gpt-4o',
                 messages: [
                     {
                         role: 'system',
