@@ -156,8 +156,7 @@
     background: var(--bg-card);
     border-radius: var(--radius-xl);
     padding: var(--space-6);
-    width: 100%;
-    max-width: 360px;
+    width: min(360px, 95%);
     text-align: center;
     animation: slideUp 0.3s ease-out;
 }

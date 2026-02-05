@@ -117,6 +117,11 @@ function AnalysisPage() {
                 throw new Error('분석할 문서가 없습니다. 문서를 다시 업로드해주세요.')
             }
 
+            // 단계 정보 로드 (기본값: 'pre')
+            const stage = (stateData && stateData.stage) ||
+                (sessionData && JSON.parse(sessionData).stage) ||
+                'pre'
+
             setHasRegistry(hasRegistryDoc)
             await delay(500)
 
@@ -165,7 +170,8 @@ function AnalysisPage() {
             }
 
             setStatusMessage('위험도를 분석하는 중...')
-            const analysisResult = await analyzeDocuments(contractText, registryText)
+            setStatusMessage('위험도를 분석하는 중 (단계: ' + getStageLabel(stage) + ')...')
+            const analysisResult = await analyzeDocuments(contractText, registryText, stage)
 
             // 등기부등본 없이 분석한 경우 표시
             if (!hasRegistryDoc) {
@@ -179,7 +185,10 @@ function AnalysisPage() {
             setStatusMessage('분석 보고서를 생성하는 중...')
             await delay(500)
 
-            sessionStorage.setItem('analysisResult', JSON.stringify(analysisResult))
+            sessionStorage.setItem('analysisResult', JSON.stringify({
+                ...analysisResult,
+                stage: stage
+            }))
             sessionStorage.removeItem('analysisData')
 
             navigate('/result')
@@ -187,6 +196,12 @@ function AnalysisPage() {
         } catch (err) {
             setError(err.message)
         }
+    }
+
+    const getStageLabel = (stage) => {
+        if (stage === 'ing') return '계약 중'
+        if (stage === 'post') return '계약 후'
+        return '계약 전'
     }
 
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))

@@ -265,3 +265,27 @@
         transform: translateY(0);
     }
 }
+
+@media (max-width: 480px) {
+    .calculator-page {
+        padding: 16px;
+    }
+
+    .input-card,
+    .result-card {
+        padding: 16px;
+    }
+
+    .result-value {
+        font-size: 28px;
+    }
+
+    .info-text {
+        font-size: 10px;
+    }
+
+    .calc-btn {
+        padding: 14px;
+        font-size: 15px;
+    }
+}

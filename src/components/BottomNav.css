@@ -2,47 +2,71 @@
     position: fixed;
     bottom: 0;
     left: 0;
-    right: 0;
-    background: var(--bg-primary);
-    border-top: 1px solid var(--border-color);
+    width: 100%;
+    height: 60px;
+    background-color: #fff;
     display: flex;
     justify-content: space-around;
-    padding: 8px 0;
-    padding-bottom: calc(8px + var(--safe-area-bottom, 0px));
-    z-index: 100;
+    align-items: center;
+    border-top: 1px solid #eee;
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .nav-item {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 8px 16px;
     text-decoration: none;
-    color: var(--text-muted);
-    transition: color var(--transition-fast);
-}
-
-.nav-item:active {
-    opacity: 0.7;
-}
-
-.nav-item.active {
-    color: var(--text-primary);
+    color: #999;
+    font-size: 11px;
+    width: 100%;
+    height: 100%;
+    transition: color 0.2s;
 }
 
 .nav-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-bottom: 2px;
 }
 
 .nav-icon svg {
-    width: 22px;
-    height: 22px;
+    width: 100%;
+    height: 100%;
 }
 
-@media (min-width: 768px) {
-    .bottom-nav {
-        display: none;
-    }
+.nav-item.active {
+    color: #1890ff;
+}
+
+/* 중앙 강조 버튼 스타일 */
+.nav-item.primary-action {
+    color: #1890ff;
+    position: relative;
+    top: -15px;
+}
+
+.nav-item.primary-action .nav-icon {
+    width: 48px;
+    height: 48px;
+    background: #1890ff;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(24, 144, 255, 0.3);
+    margin-bottom: 0;
+}
+
+.nav-item.primary-action .nav-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.nav-item.primary-action .nav-label {
+    margin-top: 4px;
+    font-weight: bold;
 }

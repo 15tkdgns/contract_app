@@ -2,413 +2,411 @@ import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ContractVisual from '../components/ContractVisual'
 import ContractRelationHub from '../components/ContractRelationHub'
+import RiskSummaryPanel from '../components/RiskSummaryPanel'
+import SmartChecklist from '../components/SmartChecklist'
+import RiskRadarChart from '../components/dev/RiskRadarChart'
+import ContractViewer from '../components/ContractViewer'
 import { generatePdfReport } from '../services/pdfService'
 import { saveHistory } from '../services/historyService'
 import { useChat } from '../context/ChatContext'
+import DevTools from '../components/dev/DevTools'
+import PriceAnalysisPanel from '../components/PriceAnalysisPanel'
 import './ResultPage.css'
+
+// --- SVG Icons ---
+const BackIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+)
+const ShareIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="18" cy="5" r="3" />
+        <circle cx="6" cy="12" r="3" />
+        <circle cx="18" cy="19" r="3" />
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+    </svg>
+)
+const DownloadIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+)
+const CheckCircleIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#28a745" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+)
+const ChevronRightIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="9 18 15 12 9 6" />
+    </svg>
+)
 
 function ResultPage() {
     const location = useLocation()
     const navigate = useNavigate()
     const { updateContextData, openChat, addMessage } = useChat()
+
+    // State
     const [result, setResult] = useState(null)
-    const [activeTab, setActiveTab] = useState('summary')
+    const [activeTab, setActiveTab] = useState(location.state?.initialTab || 'summary') // 'summary' | 'detail' | 'guide' | 'dev'
     const [showShareModal, setShowShareModal] = useState(false)
     const [copySuccess, setCopySuccess] = useState(false)
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
-    const hasNotifiedChat = useRef(false) // 챗봇 알림 중복 방지
-    const [expandedSections, setExpandedSections] = useState({
-        graph: true,
-        issues: false,
-        visual: false,
-        info: false
-    })
+    const hasNotifiedChat = useRef(false)
 
-    // 데이터 로드
+    // Data Load Effect
     useEffect(() => {
         if (location.state?.result) {
             setResult(location.state.result)
-            if (!location.state.result.isSample) {
-                saveHistory(location.state.result)
-            }
+            if (!location.state.result.isSample) saveHistory(location.state.result)
             return
         }
-
-        const analysisResult = sessionStorage.getItem('analysisResult')
-        if (analysisResult) {
-            const parsed = JSON.parse(analysisResult)
+        const stored = sessionStorage.getItem('analysisResult')
+        if (stored) {
+            const parsed = JSON.parse(stored)
             setResult(parsed)
-            if (!parsed.isSample) {
-                saveHistory(parsed)
-            }
+            if (!parsed.isSample) saveHistory(parsed)
         } else {
             navigate('/')
         }
     }, [location.state, navigate])
 
-    // 챗봇 연동
+    // Chatbot & LocalStorage Sync Effect
     useEffect(() => {
-        if (result && !hasNotifiedChat.current) {
-            updateContextData(result)
-            hasNotifiedChat.current = true
+        if (result) {
+            // 새 창에서 접근 가능하도록 localStorage에도 저장
+            localStorage.setItem('analysisResult', JSON.stringify(result))
 
-            setTimeout(() => {
-                openChat()
-                addMessage({
-                    role: 'bot',
-                    content: `분석이 완료되었습니다! 🏠\n\n계약서와 등기부등본 분석 내용을 확인했습니다. 궁금한 점이 있으시면 언제든지 물어봐주세요.`
-                })
-            }, 800)
+            if (!hasNotifiedChat.current) {
+                updateContextData(result)
+                hasNotifiedChat.current = true
+            }
         }
-    }, [result, updateContextData, openChat, addMessage])
+    }, [result, updateContextData, openChat])
 
+    if (!result) return null
+
+    // Helpers
+    const getRiskInfo = (level) => {
+        switch (level) {
+            case 'critical': return { label: '매우 위험', className: 'critical', color: '#dc3545' }
+            case 'high': return { label: '위험', className: 'danger', color: '#ff9800' }
+            case 'medium': return { label: '주의', className: 'warning', color: '#ffc107' }
+            default: return { label: '안전', className: 'success', color: '#28a745' }
+        }
+    }
+    const riskInfo = getRiskInfo(result.overallRiskLevel)
+    const contractData = result.contractData || result.extractedData || {}
+
+    // Actions
     const handleDownloadPdf = async () => {
         setIsGeneratingPdf(true)
-        try {
-            await generatePdfReport(result)
-        } finally {
-            setIsGeneratingPdf(false)
-        }
+        try { await generatePdfReport(result) } finally { setIsGeneratingPdf(false) }
     }
-
-    const handleNewAnalysis = () => {
-        sessionStorage.removeItem('analysisResult')
-        navigate('/')
-    }
-
     const handleShare = () => {
         if (navigator.share) {
             navigator.share({
-                title: 'Constract - 전세사기 위험도 분석',
-                text: generateShareText(),
+                title: 'Constract 분석 결과',
+                text: `위험도: ${result.overallScore}점 (${riskInfo.label})`,
                 url: window.location.origin
             }).catch(() => { })
         } else {
             setShowShareModal(true)
         }
     }
-
     const handleCopyLink = () => {
-        navigator.clipboard.writeText(generateShareText()).then(() => {
-            setCopySuccess(true)
-            setTimeout(() => setCopySuccess(false), 2000)
-        })
+        navigator.clipboard.writeText(window.location.href)
+        setCopySuccess(true)
+        setTimeout(() => setCopySuccess(false), 2000)
     }
 
-    const generateShareText = () => {
-        if (!result) return ''
-        const riskLabel = getRiskLevelInfo(result.overallRiskLevel).label
-        return `[Constract] 전세사기 위험도: ${result.overallScore}점 (${riskLabel})`
+    const handleOpenFullScreen = (path) => {
+        window.open(path, '_blank', 'noopener,noreferrer')
     }
 
-    const toggleSection = (section) => {
-        setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }))
-    }
+    // --- Render Tabs ---
 
-    if (!result) return null
+    // 1. [핵심] Summary Tab
+    const renderSummaryTab = () => (
+        <div className="tab-pane fade-in">
+            {/* Full Screen Actions */}
+            <div className="full-screen-actions" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <button
+                    onClick={() => handleOpenFullScreen('/view/contract')}
+                    className="action-btn"
+                    style={{ flex: 1, padding: '12px', background: '#333', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                    📑 계약서 원문 (전체화면)
+                </button>
+                <button
+                    onClick={() => handleOpenFullScreen('/view/relation')}
+                    className="action-btn"
+                    style={{ flex: 1, padding: '12px', background: 'white', color: '#333', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                    🕸️ 계약 관계도 (전체화면)
+                </button>
+            </div>
 
-    const getRiskLevelInfo = (level) => {
-        switch (level) {
-            case 'critical': return { label: '매우 위험', className: 'critical' }
-            case 'high': return { label: '위험', className: 'danger' }
-            case 'medium': return { label: '주의', className: 'warning' }
-            default: return { label: '안전', className: 'success' }
-        }
-    }
-
-    const riskInfo = getRiskLevelInfo(result.overallRiskLevel)
-    const contractData = result.contractData || result.extractedData || {}
-
-    return (
-        <div className="result-page scroll-layout">
-            {/* 헤더: 위험도 점수 */}
-            <section className="score-hero">
-                <div className={`score-badge ${riskInfo.className}`}>
-                    <span className="score-value">{result.overallScore}</span>
-                    <span className="score-label">{riskInfo.label}</span>
+            {/* Score Hero */}
+            <div className="score-hero-compact">
+                <div className="score-circle" style={{ borderColor: riskInfo.color, color: riskInfo.color }}>
+                    <span className="score-num">{result.overallScore}</span>
+                    <span className="score-text">{riskInfo.label}</span>
                 </div>
-                {result.isSample && <span className="sample-tag">예시 분석</span>}
+                <div className="score-meta">
+                    <h2 className="address-text">{contractData.address || '주소 정보 없음'}</h2>
+                    <p className="price-text">보증금 {contractData.deposit ? `${(contractData.deposit / 100000000).toFixed(1)}억` : '-'}</p>
+                </div>
+            </div>
+
+            {/* Risk Panel */}
+            <RiskSummaryPanel panelData={result.summary_panel} />
+
+            {/* Price Analysis (Summary View) */}
+            <PriceAnalysisPanel
+                address={contractData.address}
+                deposit={contractData.deposit}
+                area={contractData.area}
+            />
+
+            {/* Top 3 Checklist (Static for now, dynamic later) */}
+            <div className="top3-actions-card">
+                <h3>필수 확인 3가지</h3>
+                <div className="action-item">
+                    <div className="action-status danger">확인필요</div>
+                    <div className="action-content">
+                        <h4>등기부등본 재발급</h4>
+                        <p>계약 직전 권리변동 확인 필수</p>
+                    </div>
+                    <button className="action-btn">방법</button>
+                </div>
+                <div className="action-item">
+                    <div className="action-status warning">주의</div>
+                    <div className="action-content">
+                        <h4>선순위 채권 확인</h4>
+                        <p>은행 대출금 상환 여부 체크</p>
+                    </div>
+                    <button className="action-btn">방법</button>
+                </div>
+                <div className="action-item">
+                    <div className="action-status neutral">대기</div>
+                    <div className="action-content">
+                        <h4>확정일자 부여</h4>
+                        <p>계약 즉시 주민센터 방문</p>
+                    </div>
+                    <button className="action-btn">방법</button>
+                </div>
+            </div>
+
+            <button className="btn-full-primary" onClick={() => setActiveTab('detail')}>
+                상세 분석 결과 전체 보기
+            </button>
+        </div>
+    )
+
+    // 2. [상세] Detail Tab
+    const renderDetailTab = () => (
+        <div className="tab-pane fade-in">
+            {/* Relation Graph */}
+            <section className="detail-section">
+                <h3>계약 관계도</h3>
+                <div className="graph-container">
+                    <ContractRelationHub
+                        contractData={contractData}
+                        entities={result.entities}
+                        relations={result.relations}
+                    />
+                </div>
             </section>
 
-            {/* 섹션 1: 관계도 (React Flow) */}
-            <section className="result-section">
-                <button className="section-header" onClick={() => toggleSection('graph')}>
-                    <h2>계약 관계도</h2>
-                    <span className={`expand-icon ${expandedSections.graph ? 'open' : ''}`}>v</span>
+            {/* Fraud Warning */}
+            {result.matchedPatterns && result.matchedPatterns.length > 0 && (
+                <section className="detail-section">
+                    <div className="fraud-alert-box">
+                        <div className="fraud-title">사기 위험 패턴 감지</div>
+                        {result.matchedPatterns.map((p, i) => (
+                            <div key={i} className="fraud-item">
+                                <span className="fraud-name">{p.name}</span>
+                                <span className="fraud-desc">{p.reason}</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Full Checklist moved to separate Tab */}
+
+            {/* Contract Visual */}
+            <section className="detail-section">
+                <h3>계약 시각화</h3>
+                <ContractVisual data={{
+                    landlord: contractData.landlord || '임대인',
+                    tenant: contractData.tenant || '임차인',
+                    deposit: contractData.deposit || 200000000,
+                    marketPrice: contractData.marketPrice || 300000000,
+                    mortgageAmount: contractData.mortgageAmount || 0,
+                    contractDate: contractData.startDate || '2026-01-15',
+                    endDate: contractData.endDate || '2028-01-14',
+                    address: contractData.address || '주소 정보',
+                    hasInsurance: contractData.hasInsurance || false,
+                    isProxy: contractData.isProxy || false
+                }} />
+            </section>
+
+            {/* Verification */}
+            {result.documentVerification && (
+                <section className="detail-section">
+                    <h3>문서 교차 검증</h3>
+                    <div className="verification-list">
+                        {Object.entries(result.documentVerification).map(([key, val]) => (
+                            <div key={key} className={`verify-row ${val.status}`}>
+                                <div className="verify-label">
+                                    {key === 'ownerMatch' ? '소유자' : key === 'addressMatch' ? '주소' : '기타'}
+                                </div>
+                                <div className="verify-result">
+                                    {val.status === 'match' ? '일치' : '불일치'}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+        </div>
+    )
+
+    // 3. [가이드] Guide Tab
+    const renderGuideTab = () => (
+        <div className="tab-pane fade-in">
+            <div className="guide-timeline">
+                <h3>진행 단계별 가이드</h3>
+                <div className="timeline-item active">
+                    <div className="timeline-marker"></div>
+                    <div className="timeline-content">
+                        <h4>계약 체결일 (오늘)</h4>
+                        <ul>
+                            <li><CheckCircleIcon /> 등기부등본 당일 발급 확인</li>
+                            <li><CheckCircleIcon /> 신분증 진위 여부 확인</li>
+                            <li><CheckCircleIcon /> 특약사항 꼼꼼히 기재</li>
+                        </ul>
+                    </div>
+                </div>
+                <div className="timeline-item">
+                    <div className="timeline-marker"></div>
+                    <div className="timeline-content">
+                        <h4>잔금일 전</h4>
+                        <ul>
+                            <li>중도금 입금 전 권리변동 확인</li>
+                            <li>대출 실행 가능 여부 최종 점검</li>
+                        </ul>
+                    </div>
+                </div>
+                <div className="timeline-item">
+                    <div className="timeline-marker"></div>
+                    <div className="timeline-content">
+                        <h4>이사 당일</h4>
+                        <ul>
+                            <li>전입신고 즉시 신청</li>
+                            <li>확정일자 부여 확인</li>
+                            <li>잔금 입금</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {result.glossary && (
+                <div className="glossary-box">
+                    <h3>법률 용어 해설</h3>
+                    {result.glossary.map((item, i) => (
+                        <div key={i} className="glossary-row">
+                            <span className="term">{item.term}</span>
+                            <span className="def">{item.definition}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+
+    return (
+        <div className="result-page-new">
+            {/* Header */}
+            <header className="result-header">
+                <button className="back-btn" onClick={() => navigate('/')}>
+                    <BackIcon />
                 </button>
-                {expandedSections.graph && (
-                    <div className="section-content graph-section">
-                        <ContractRelationHub
-                            contractData={contractData}
-                            entities={result.entities}
-                            relations={result.relations}
+                <h1 className="header-title">
+                    분석 결과
+                    {result.isSample && <span className="test-mode-badge" style={{ fontSize: '0.6em', marginLeft: '8px', background: '#ecc94b', color: '#744210', padding: '2px 8px', borderRadius: '12px', verticalAlign: 'middle' }}>TEST (가상 데이터)</span>}
+                </h1>
+                <div className="header-actions">
+                    <button onClick={handleDownloadPdf}><DownloadIcon /></button>
+                    <button onClick={handleShare}><ShareIcon /></button>
+                </div>
+            </header>
+
+            {/* Tabs Navigation */}
+            <div className="tabs-bar">
+                {['summary', 'contract', 'detail', 'checklist', 'guide', 'dev'].map(tab => (
+                    <button
+                        key={tab}
+                        className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
+                        onClick={() => setActiveTab(tab)}
+                    >
+                        {tab === 'summary' && '핵심'}
+                        {tab === 'contract' && '계약서'}
+                        {tab === 'detail' && '상세'}
+                        {tab === 'checklist' && '체크리스트'}
+                        {tab === 'guide' && '가이드'}
+                        {tab === 'dev' && '실험실'}
+                    </button>
+                ))}
+            </div>
+
+            {/* Content Area */}
+            <div className={`result-content-area ${activeTab === 'contract' ? 'no-padding' : ''}`}>
+                {activeTab === 'summary' && renderSummaryTab()}
+                {activeTab === 'detail' && renderDetailTab()}
+                {activeTab === 'contract' && (
+                    <div className="tab-pane fade-in no-padding">
+                        <ContractViewer
+                            text={result.ocrText}
+                            analysis={result.clauseAnalysis || []}
                         />
                     </div>
                 )}
-            </section>
-
-            {/* 섹션 2: 위험 요소 */}
-            {result.issues && result.issues.length > 0 && (
-                <section className="result-section">
-                    <button className="section-header" onClick={() => toggleSection('issues')}>
-                        <h2>위험 요소 <span className="count-badge">{result.issues.length}</span></h2>
-                        <span className={`expand-icon ${expandedSections.issues ? 'open' : ''}`}>v</span>
-                    </button>
-                    {expandedSections.issues && (
-                        <div className="section-content">
-                            {/* 사기 패턴 경고 */}
-                            {result.matchedPatterns && result.matchedPatterns.length > 0 && (
-                                <div className="fraud-warning-box">
-                                    <div className="fraud-warning-header">
-                                        <span className="warning-icon">🚨</span>
-                                        <h3>전세사기 위험 패턴 감지</h3>
-                                    </div>
-                                    <div className="fraud-patterns-list">
-                                        {result.matchedPatterns.map((pattern, idx) => (
-                                            <div key={idx} className="fraud-pattern-item">
-                                                <span className="pattern-name">{pattern.name}</span>
-                                                <p className="pattern-reason">{pattern.reason}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="warning-footer">
-                                        <p>※ 위 패턴은 AI 분석 결과이며, 실제 사실과 다를 수 있습니다. 반드시 전문 법률 상담을 받아보세요.</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="issues-list">
-                                {result.issues.map((issue, index) => {
-                                    const issueRisk = getRiskLevelInfo(issue.severity)
-                                    return (
-                                        <div key={index} className={`issue-card issue-${issueRisk.className}`}>
-                                            <span className={`badge badge-${issueRisk.className}`}>{issueRisk.label}</span>
-                                            <div className="issue-content">
-                                                <h4>{issue.type}</h4>
-                                                <p>{issue.message}</p>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    )}
-                </section>
-            )}
-
-            {/* 섹션 3: 계약 시각화 */}
-            <section className="result-section">
-                <button className="section-header" onClick={() => toggleSection('visual')}>
-                    <h2>계약 시각화</h2>
-                    <span className={`expand-icon ${expandedSections.visual ? 'open' : ''}`}>v</span>
-                </button>
-                {expandedSections.visual && (
-                    <div className="section-content">
-                        <ContractVisual data={{
-                            landlord: contractData.landlord || '임대인',
-                            tenant: contractData.tenant || '임차인',
-                            deposit: contractData.deposit || 200000000,
-                            marketPrice: contractData.marketPrice || 300000000,
-                            mortgageAmount: contractData.mortgageAmount || 0,
-                            contractDate: contractData.startDate || '2026-01-15',
-                            endDate: contractData.endDate || '2028-01-14',
-                            address: contractData.address || '주소 정보',
-                            hasInsurance: contractData.hasInsurance || false,
-                            isProxy: contractData.isProxy || false
-                        }} />
+                {activeTab === 'checklist' && (
+                    <div className="tab-pane fade-in">
+                        <section className="detail-section">
+                            <h3>상세 체크리스트</h3>
+                            <p className="section-desc">계약 단계별로 꼼꼼히 챙겨야 할 항목들을 확인하세요.</p>
+                            <SmartChecklist result={result} embedded={true} />
+                        </section>
                     </div>
                 )}
-            </section>
-
-            {/* 섹션 4: 계약 정보 */}
-            <section className="result-section">
-                <button className="section-header" onClick={() => toggleSection('info')}>
-                    <h2>계약 정보</h2>
-                    <span className={`expand-icon ${expandedSections.info ? 'open' : ''}`}>v</span>
-                </button>
-                {expandedSections.info && (
-                    <div className="section-content">
-                        <div className="info-grid">
-                            <div className="info-item">
-                                <span className="info-label">임대인</span>
-                                <span className="info-value">{contractData.landlord || '-'}</span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">임차인</span>
-                                <span className="info-value">{contractData.tenant || '-'}</span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">보증금</span>
-                                <span className="info-value">{contractData.deposit ? `${(contractData.deposit / 100000000).toFixed(1)}억원` : '-'}</span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">주소</span>
-                                <span className="info-value">{contractData.address || '-'}</span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">계약기간</span>
-                                <span className="info-value">{contractData.startDate} ~ {contractData.endDate}</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </section>
-
-            {/* 섹션 5: 문서 검증 결과 (AI) */}
-            {result.documentVerification && (
-                <section className="result-section verification-section">
-                    <div className="section-header-static">
-                        <h2>문서 교차 검증</h2>
-                        <span className="ai-badge">AI 자동검증</span>
-                    </div>
-                    <div className="section-content">
-                        <div className="verification-grid">
-                            {Object.entries(result.documentVerification).map(([key, value]) => (
-                                <div key={key} className={`verification-item ${value.status}`}>
-                                    <div className="verification-icon">
-                                        {value.status === 'match' ? '✓' : value.status === 'mismatch' ? '✗' : '?'}
-                                    </div>
-                                    <div className="verification-content">
-                                        <span className="verification-label">
-                                            {key === 'ownerMatch' ? '소유자 일치' :
-                                                key === 'addressMatch' ? '주소 일치' : '면적 일치'}
-                                        </span>
-                                        {value.status !== 'unknown' && (
-                                            <div className="verification-values">
-                                                <span>계약서: {value.contractValue || '-'}</span>
-                                                <span>등기부: {value.registryValue || '-'}</span>
-                                            </div>
-                                        )}
-                                        {value.message && <p className="verification-message">{value.message}</p>}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            )}
-
-            {/* 섹션 6: 맞춤형 가이드 (AI) */}
-            {result.personalizedGuide && (
-                <section className="result-section guide-section">
-                    <div className="section-header-static">
-                        <h2>맞춤형 가이드</h2>
-                        <span className="ai-badge">AI 추천</span>
-                    </div>
-                    <div className="section-content">
-                        {result.personalizedGuide.warnings?.length > 0 && (
-                            <div className="guide-block warnings">
-                                <h4>주의사항</h4>
-                                <ul>
-                                    {result.personalizedGuide.warnings.map((item, idx) => (
-                                        <li key={idx}>{item}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        {result.personalizedGuide.checklist?.length > 0 && (
-                            <div className="guide-block checklist">
-                                <h4>확인 체크리스트</h4>
-                                <ul>
-                                    {result.personalizedGuide.checklist.map((item, idx) => (
-                                        <li key={idx}>{item}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        {result.personalizedGuide.nextSteps?.length > 0 && (
-                            <div className="guide-block next-steps">
-                                <h4>다음 단계</h4>
-                                <ul>
-                                    {result.personalizedGuide.nextSteps.map((item, idx) => (
-                                        <li key={idx}>{item}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                </section>
-            )}
-
-            {/* 섹션 7: 용어 사전 (AI) */}
-            {result.glossary && result.glossary.length > 0 && (
-                <section className="result-section glossary-section">
-                    <div className="section-header-static">
-                        <h2>용어 해설</h2>
-                    </div>
-                    <div className="section-content">
-                        <div className="glossary-list">
-                            {result.glossary.map((item, idx) => (
-                                <div key={idx} className="glossary-item">
-                                    <span className="glossary-term">{item.term}</span>
-                                    <span className="glossary-definition">{item.definition}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            )}
-
-            {/* 섹션 8: 다음 단계 */}
-            <section className="next-steps-section">
-                <h2>다음 단계</h2>
-                <div className="action-cards">
-                    <div className="action-card" onClick={() => navigate('/checklist')}>
-                        <div className="action-icon checklist">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M9 11l3 3L22 4" />
-                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                            </svg>
-                        </div>
-                        <div className="action-text">
-                            <h4>체크리스트</h4>
-                            <p>계약 전 필수 확인</p>
-                        </div>
-                    </div>
-                    <div className="action-card" onClick={() => navigate('/calculator')}>
-                        <div className="action-icon calculator">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <rect x="4" y="2" width="16" height="20" rx="2" />
-                                <line x1="8" y1="6" x2="16" y2="6" />
-                            </svg>
-                        </div>
-                        <div className="action-text">
-                            <h4>전세가율 계산</h4>
-                            <p>적정 전세가 확인</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* 하단 액션 */}
-            <section className="result-actions">
-                <div className="action-row">
-                    <button className="btn btn-primary" onClick={handleDownloadPdf} disabled={isGeneratingPdf}>
-                        {isGeneratingPdf ? '생성 중...' : 'PDF 리포트'}
-                    </button>
-                    <button className="btn btn-kakao" onClick={handleShare}>
-                        카카오톡 공유
-                    </button>
-                </div>
-                <button className="btn btn-secondary btn-lg" onClick={handleNewAnalysis}>새 분석</button>
-            </section>
-
-            {/* 공유 모달 */}
-            {showShareModal && (
-                <div className="share-modal-overlay" onClick={() => setShowShareModal(false)}>
-                    <div className="share-modal" onClick={e => e.stopPropagation()}>
-                        <h3>분석 결과 공유</h3>
-                        <button className="share-btn" onClick={handleCopyLink}>
-                            {copySuccess ? '복사됨!' : '텍스트 복사'}
-                        </button>
-                        <button className="btn btn-secondary" onClick={() => setShowShareModal(false)}>닫기</button>
-                    </div>
-                </div>
-            )}
-
-            <div className="privacy-reminder">
-                <p>브라우저 종료 시 모든 데이터가 삭제됩니다.</p>
+                {activeTab === 'guide' && renderGuideTab()}
+                {activeTab === 'dev' && <DevTools result={result} />}
             </div>
+
+            {/* Share Modal */}
+            {showShareModal && (
+                <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
+                    <div className="modal-card" onClick={e => e.stopPropagation()}>
+                        <h3>공유하기</h3>
+                        <div className="modal-actions">
+                            <button className="btn-primary" onClick={handleCopyLink}>
+                                {copySuccess ? '복사완료' : '링크 복사'}
+                            </button>
+                            <button className="btn-text" onClick={() => setShowShareModal(false)}>닫기</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

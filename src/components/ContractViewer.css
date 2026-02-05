@@ -1,0 +1,227 @@
+.contract-viewer-container {
+    display: flex;
+    gap: 12px;
+    height: 600px;
+    background: transparent;
+    padding: 0;
+    border-radius: 12px;
+}
+
+.pdf-view-panel {
+    flex: 2;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.analysis-side-panel {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 300px;
+}
+
+.panel-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    z-index: 10;
+}
+
+.panel-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.badge-ocr,
+.badge-ai {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.badge-ocr {
+    background: #e6f7ff;
+    color: #1890ff;
+}
+
+.badge-ai {
+    background: #f6ffed;
+    color: #52c41a;
+}
+
+.pdf-content {
+    flex: 1;
+    padding: 15px 5px;
+    overflow-y: auto;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: #333;
+    white-space: pre-wrap;
+}
+
+.ocr-text-content {
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+    margin: 0;
+}
+
+.highlight-clause {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px 0;
+    transition: all 0.2s;
+}
+
+.highlight-clause:hover {
+    filter: brightness(0.95);
+}
+
+.highlight-clause.active,
+.highlight-clause.selected {
+    box-shadow: 0 0 0 2px #333;
+    font-weight: bold;
+}
+
+/* Colors for risks */
+.highlight-clause.toxic {
+    background-color: #ffccc7;
+    color: #cf1322;
+}
+
+/* Red */
+.highlight-clause.warning,
+.highlight-clause.unfair {
+    background-color: #ffe7ba;
+    color: #d46b08;
+}
+
+/* Orange */
+.highlight-clause.ambiguous {
+    background-color: #fff1b8;
+    color: #d48806;
+}
+
+/* Yellow */
+.highlight-clause.safe {
+    background-color: #d9f7be;
+    color: #389e0d;
+}
+
+/* Green */
+
+.clause-list {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background: #fafafa;
+}
+
+.clause-card {
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clause-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.clause-card.active {
+    border-color: #1890ff;
+    background: #e6f7ff;
+}
+
+.clause-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.risk-tag {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.risk-tag.toxic {
+    background: #fff1f0;
+    color: #cf1322;
+}
+
+.risk-tag.unfair {
+    background: #fff7e6;
+    color: #d46b08;
+}
+
+.risk-tag.safe {
+    background: #f6ffed;
+    color: #389e0d;
+}
+
+.score-badge {
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.score-badge.minus {
+    color: #fe4a49;
+}
+
+.score-badge.plus {
+    color: #2ecc71;
+}
+
+.clause-snippet {
+    font-size: 0.85rem;
+    color: #555;
+    margin: 0;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+.clause-detail {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #ddd;
+}
+
+.reason {
+    font-size: 0.85rem;
+    color: #333;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .contract-viewer-container {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .analysis-side-panel {
+        min-width: 100%;
+    }
+}

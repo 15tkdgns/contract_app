@@ -1,0 +1,148 @@
+.smart-checklist {
+    background: #fff;
+    border-radius: 8px;
+    /* embedded일 때는 그림자 제거 등 */
+}
+
+.smart-checklist.embedded {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.checklist-ai-alert {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1e40af;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.ai-icon {
+    font-size: 1.2rem;
+}
+
+.checklist-group {
+    margin-bottom: 24px;
+}
+
+.group-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #f3f4f6;
+    padding-bottom: 6px;
+}
+
+.group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.checklist-item:hover {
+    background: #f9fafb;
+}
+
+.checklist-item.highlighted {
+    background: #fffbeb;
+    border-color: #fcd34d;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.1);
+}
+
+.checklist-item.checked {
+    opacity: 0.6;
+    text-decoration: line-through;
+    color: #9ca3af;
+}
+
+.checklist-item input {
+    display: none;
+}
+
+.checkbox-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+.checklist-item.checked .checkbox-custom {
+    background: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.checklist-item.highlighted .checkbox-custom {
+    border-color: #f59e0b;
+}
+
+.item-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.item-text {
+    flex: 1;
+    line-height: 1.4;
+    font-size: 0.95rem;
+}
+
+.highlight-tag {
+    background: #fef3c7;
+    color: #b45309;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.check-status-bar {
+    margin-top: 16px;
+    text-align: center;
+    padding: 8px;
+    background: #fef2f2;
+    color: #dc2626;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

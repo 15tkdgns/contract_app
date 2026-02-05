@@ -10,14 +10,21 @@
   },
   "dependencies": {
     "chart.js": "^4.5.1",
+    "cytoscape": "^3.33.1",
+    "d3": "^7.9.0",
+    "d3-sankey": "^0.12.3",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
+    "mermaid": "^11.12.2",
     "pdfjs-dist": "^5.4.530",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.3.1",
+    "react-cytoscapejs": "^2.0.0",
     "react-dom": "^18.3.1",
+    "react-force-graph-2d": "^1.29.0",
     "react-router-dom": "^6.22.0",
     "reactflow": "^11.11.4",
+    "recharts": "^3.7.0",
     "tesseract.js": "^5.0.4"
   },
   "devDependencies": {

@@ -1,0 +1,132 @@
+/* PriceAnalysisPanel.css */
+
+.price-analysis-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    margin-bottom: 24px;
+}
+
+.price-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.price-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+}
+
+.mock-badge {
+    font-size: 0.7rem;
+    background: #edf2f7;
+    color: #718096;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.price-summary-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.summary-row .label {
+    color: #718096;
+}
+
+.summary-row .value {
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.ratio-bar-container {
+    margin-top: 16px;
+}
+
+.ratio-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+.ratio-bar-bg {
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.ratio-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 1s ease-in-out;
+}
+
+.safe-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: white;
+    border-right: 1px dashed #718096;
+    z-index: 2;
+}
+
+.ratio-guideline {
+    font-size: 0.7rem;
+    color: #a0aec0;
+    text-align: right;
+    width: 70%;
+    /* 70% 위치 아래 */
+    margin-top: 4px;
+}
+
+.chart-container h4 {
+    font-size: 0.9rem;
+    color: #4a5568;
+    margin-bottom: 12px;
+}
+
+.analysis-insight {
+    background: #ebf8ff;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.insight-icon {
+    font-size: 1.2rem;
+}
+
+.analysis-insight p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #2c5282;
+    line-height: 1.5;
+}
+
+.price-panel-loading {
+    padding: 20px;
+    text-align: center;
+    color: #a0aec0;
+    font-size: 0.9rem;
+}

@@ -1,0 +1,159 @@
+/* HomePage.css */
+.home-page {
+    padding: var(--space-4);
+    padding-bottom: 90px;
+    max-width: 600px;
+    margin: 0 auto;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.home-header {
+    margin-bottom: var(--space-6);
+}
+
+.home-app-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: var(--space-1);
+}
+
+.home-app-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+/* Main Action Card */
+.main-action-card {
+    background: var(--accent-gradient);
+    padding: var(--space-6);
+    border-radius: var(--radius-2xl);
+    color: white;
+    margin-bottom: var(--space-6);
+    box-shadow: 0 8px 24px rgba(26, 86, 219, 0.2);
+}
+
+.main-action-card h2 {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--space-2);
+    color: white;
+}
+
+.main-action-card p {
+    opacity: 0.9;
+    font-size: var(--font-size-base);
+    margin-bottom: var(--space-5);
+    line-height: 1.5;
+}
+
+/* History Section */
+.history-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+}
+
+.history-section-header h3 {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+}
+
+.history-item {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-3);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.history-item:active {
+    background: var(--bg-secondary);
+    transform: scale(0.98);
+}
+
+/* Tools Section - Horizontal Layout for better readability */
+.tools-grid-section {
+    margin-top: var(--space-6);
+}
+
+.tools-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+}
+
+.tool-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.tool-card:active {
+    background: var(--bg-secondary);
+    transform: scale(0.99);
+}
+
+.tool-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tool-info {
+    flex: 1;
+}
+
+.tool-info h3 {
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    margin-bottom: 2px;
+    color: var(--text-primary);
+}
+
+.tool-info p {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.4;
+    word-break: keep-all;
+}
+
+/* App Footer */
+.dev-banner {
+    margin-top: var(--space-8);
+    text-align: center;
+    padding-bottom: var(--space-4);
+}
+
+.dev-label {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
+}
+
+.btn-dev {
+    display: inline-block;
+    padding: var(--space-2) var(--space-6);
+    background: var(--text-primary);
+    color: white;
+    font-size: var(--font-size-sm);
+    border-radius: var(--radius-full);
+    text-decoration: none;
+}

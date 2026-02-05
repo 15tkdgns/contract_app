@@ -68,10 +68,10 @@ const FRAUD_TYPES = [
 /**
  * 전용 분석 함수 - 리액트 컴포넌트에서 호출
  */
-export async function analyzeDocuments(contractText, registryText) {
+export async function analyzeDocuments(contractText, registryText, stage = 'pre') {
     if (hasApiKey()) {
         try {
-            const aiResult = await analyzeContractWithAI(contractText, registryText)
+            const aiResult = await analyzeContractWithAI(contractText, registryText, stage)
             if (aiResult && aiResult.riskScore !== undefined) {
                 return formatAIResult(aiResult)
             }
@@ -101,9 +101,17 @@ function formatAIResult(aiResult) {
         fraudChecks,
         issues: aiResult.issues || [],
         recommendations: aiResult.recommendations || [],
+        contractData: aiResult.extractedData || {},
         extractedData: {
             contract: aiResult.extractedData || {},
             registry: {}
+        },
+        summary_panel: aiResult.summary_panel || {
+            jeonse_ratio: "계산 중",
+            mortgage_total: "분석 중",
+            seizure_status: "분석 중",
+            owner_match: "분석 중",
+            special_terms_check: "분석 중"
         },
         aiGenerated: true
     }
@@ -133,17 +141,35 @@ function analyzeWithRules(contractText, registryText) {
     const { score, riskLevel } = calculateOverallScore(fraudChecks, issues)
     const recommendations = generateRecommendations(fraudChecks, issues)
 
+    const contractData = extractContractData(normalizedContract)
+    const registryData = extractRegistryData(normalizedRegistry)
+
     return {
         overallScore: score,
         overallRiskLevel: riskLevel,
         fraudChecks,
         issues,
         recommendations,
+        contractData,
         extractedData: {
-            contract: extractContractData(normalizedContract),
-            registry: extractRegistryData(normalizedRegistry)
+            contract: contractData,
+            registry: registryData
+        },
+        summary_panel: {
+            jeonse_ratio: "분석 필요 (매매가 미인식)",
+            mortgage_total: registryData.mortgage ? `${formatMoneyValue(registryData.mortgage)}` : "없음",
+            seizure_status: (normalizedRegistry.includes('압류') || normalizedRegistry.includes('가압류')) ? "주의" : "없음",
+            owner_match: "확인 필요",
+            special_terms_check: normalizedContract.includes('특약') ? "포함됨" : "확인 필요"
         }
     }
+}
+
+function formatMoneyValue(val) {
+    if (!val) return '0원'
+    const num = parseInt(String(val).replace(/[^0-9]/g, ''))
+    if (num >= 100000000) return `${(num / 100000000).toFixed(1)}억원`
+    return `${(num / 10000).toLocaleString()}만원`
 }
 
 function normalizeText(text) {

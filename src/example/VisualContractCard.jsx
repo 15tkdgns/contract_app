@@ -78,7 +78,7 @@ const VisualContractCard = ({ contract }) => {
             <div className="vc-content">
                 {/* 매물 정보 */}
                 <div className="vc-section property">
-                    <div className="vc-section-icon">🏠</div>
+                    <div className="vc-section-icon">ASSET</div>
                     <div className="vc-section-content">
                         <h4>{data.property.address}</h4>
                         <div className="vc-tags">

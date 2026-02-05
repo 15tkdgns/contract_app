@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useChat } from '../context/ChatContext'
 import './Chatbot.css'
 

@@ -1,0 +1,97 @@
+.risk-summary-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+}
+
+.panel-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+.panel-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    /* 모바일: 2열 */
+    gap: 12px;
+}
+
+.panel-card {
+    background: #f9f9f9;
+    padding: 12px;
+    /* 패딩 축소 */
+    border-radius: 8px;
+    border: 1px solid #eee;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 상태별 스타일 */
+.panel-card.danger {
+    background-color: #fff5f5;
+    border-color: #feb2b2;
+}
+
+.panel-card.warning {
+    background-color: #fffaf0;
+    border-color: #fbd38d;
+}
+
+.panel-card.safe {
+    background-color: #f0fff4;
+    border-color: #9ae6b4;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+/* SVG 아이콘 박스 */
+.card-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    color: #666;
+}
+
+.card-icon-box.danger {
+    color: #e53e3e;
+}
+
+.card-icon-box.warning {
+    color: #dd6b20;
+}
+
+.card-icon-box.safe {
+    color: #38a169;
+}
+
+.card-label {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.card-value {
+    font-size: 0.95rem;
+    /* 사이즈 조정 */
+    font-weight: 700;
+    color: #2d3748;
+    line-height: 1.4;
+}
+
+/* Status light 제거 (아이콘 색상으로 대체) */
+.status-light {
+    display: none;
+}

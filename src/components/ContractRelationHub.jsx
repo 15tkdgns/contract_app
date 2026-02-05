@@ -9,136 +9,138 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import './ContractRelationHub.css'
 
-// 엔티티 타입별 색상 정의
-const entityColors = {
-    person: { main: '#3b82f6', bg: '#dbeafe', border: '#2563eb' },
-    organization: { main: '#10b981', bg: '#d1fae5', border: '#059669' },
-    asset: { main: '#f59e0b', bg: '#fef3c7', border: '#d97706' },
-    money: { main: '#ef4444', bg: '#fee2e2', border: '#dc2626' },
-    date: { main: '#8b5cf6', bg: '#ede9fe', border: '#7c3aed' },
-    location: { main: '#06b6d4', bg: '#cffafe', border: '#0891b2' },
-    default: { main: '#6b7280', bg: '#f3f4f6', border: '#4b5563' }
-}
-
-// 관계 타입별 스타일
-const relationStyles = {
-    owns: { stroke: '#22c55e', label: '소유' },
-    pays: { stroke: '#ef4444', label: '지급' },
-    receives: { stroke: '#3b82f6', label: '수령' },
-    resides: { stroke: '#f59e0b', label: '거주' },
-    guarantees: { stroke: '#8b5cf6', label: '보증' },
-    mediates: { stroke: '#10b981', label: '중개' },
-    default: { stroke: '#94a3b8', label: '' }
-}
+// 스키마 및 유틸리티 임포트
+import { NODE_STYLES, EDGE_STYLES } from '../schemas/graphSchema'
+import { buildCompleteGraph } from '../schemas/baseGraphTemplate'
+import { formatMoney, getNodeStyle, getEdgeStyle } from '../utils/graphUtils'
 
 // AI 엔티티를 React Flow 노드로 변환
-const createNodesFromEntities = (entities = []) => {
-    if (!entities || entities.length === 0) {
-        return createDefaultNodes()
+const createNodesFromSchema = (graphData) => {
+    if (!graphData || !graphData.nodes || graphData.nodes.length === 0) {
+        return []
     }
 
-    // 엔티티 타입별 그룹화
+    // 엔티티 타입별 그룹화 및 레이아웃 계산
     const groups = {}
-    entities.forEach((entity, index) => {
-        const type = entity.type || 'default'
+    graphData.nodes.forEach((node, index) => {
+        const type = node.type || 'person'
         if (!groups[type]) groups[type] = []
-        groups[type].push({ ...entity, index })
+        groups[type].push({ ...node, index })
     })
 
-    const nodes = []
+    const result = []
     let yOffset = 0
+    const groupOrder = ['person', 'property', 'money', 'date', 'right', 'institution', 'contract']
 
-    Object.entries(groups).forEach(([type, items]) => {
-        const color = entityColors[type] || entityColors.default
+    groupOrder.forEach(type => {
+        const items = groups[type]
+        if (!items) return
 
-        items.forEach((entity, idx) => {
-            nodes.push({
-                id: entity.id,
-                position: { x: 50 + (idx * 180), y: yOffset + 50 },
+        const style = NODE_STYLES[type] || NODE_STYLES.person
+
+        items.forEach((node, idx) => {
+            const isRisk = node.isRisk || style.isRisk
+
+            result.push({
+                id: node.id,
+                position: { x: 50 + (idx * 200), y: yOffset + 50 },
                 data: {
                     label: (
-                        <div className="kb-node">
-                            <span className="kb-node-type">{entity.name || type}</span>
-                            <span className="kb-node-value">{entity.value || entity.id}</span>
+                        <div className={`kb-node ${isRisk ? 'kb-node-risk' : ''}`}>
+                            <span className="kb-node-icon">{style.icon}</span>
+                            <span className="kb-node-type">{node.label}</span>
+                            <span className="kb-node-value">
+                                {node.type === 'money' ? formatMoney(node.value) : (node.value || node.id)}
+                            </span>
                         </div>
-                    )
+                    ),
+                    properties: node.properties || {}
                 },
                 style: {
-                    background: color.bg,
-                    border: `2px solid ${color.border}`,
-                    borderRadius: 8,
+                    background: style.bg,
+                    border: `2px ${isRisk ? 'dashed' : 'solid'} ${style.border}`,
+                    borderRadius: 12,
                     padding: 0,
-                    minWidth: 120
+                    minWidth: 140,
+                    boxShadow: isRisk ? `0 0 12px ${style.color}40` : 'none'
                 }
             })
         })
-        yOffset += 120
+        yOffset += 130
     })
 
-    return nodes
+    return result
 }
 
-// AI 관계를 React Flow 엣지로 변환
-const createEdgesFromRelations = (relations = []) => {
-    if (!relations || relations.length === 0) {
-        return createDefaultEdges()
+// 스키마 관계를 React Flow 엣지로 변환
+const createEdgesFromSchema = (graphData) => {
+    if (!graphData || !graphData.edges || graphData.edges.length === 0) {
+        return []
     }
 
-    return relations.map((rel, idx) => {
-        const style = relationStyles[rel.type] || relationStyles.default
+    return graphData.edges.map((edge) => {
+        const style = EDGE_STYLES[edge.type] || EDGE_STYLES.owns
+        const isRisk = edge.isRisk || style.isRisk
+
         return {
-            id: `e-${idx}`,
-            source: rel.source,
-            target: rel.target,
-            label: rel.label || style.label,
+            id: edge.id,
+            source: edge.source,
+            target: edge.target,
+            label: edge.label || style.label,
             type: 'smoothstep',
-            style: { stroke: style.stroke, strokeWidth: 2 },
-            labelStyle: { fontSize: 10, fontWeight: 500 },
-            markerEnd: { type: MarkerType.ArrowClosed, color: style.stroke }
+            animated: isRisk || style.animated,
+            style: {
+                stroke: style.stroke,
+                strokeWidth: style.width,
+                strokeDasharray: style.style === 'dashed' ? '8,4' :
+                    style.style === 'dotted' ? '3,3' : 'none'
+            },
+            labelStyle: {
+                fontSize: 11,
+                fontWeight: 600,
+                fill: style.stroke
+            },
+            markerEnd: {
+                type: MarkerType.ArrowClosed,
+                color: style.stroke,
+                width: 20,
+                height: 20
+            }
         }
     })
 }
 
-// 기본 노드 (AI 데이터 없을 때 폴백)
-const createDefaultNodes = () => [
-    { id: 'landlord', position: { x: 50, y: 50 }, data: { label: <div className="kb-node"><span className="kb-node-type">임대인</span><span className="kb-node-value">정보 없음</span></div> }, style: { background: entityColors.person.bg, border: `2px solid ${entityColors.person.border}`, borderRadius: 8 } },
-    { id: 'tenant', position: { x: 230, y: 50 }, data: { label: <div className="kb-node"><span className="kb-node-type">임차인</span><span className="kb-node-value">정보 없음</span></div> }, style: { background: entityColors.person.bg, border: `2px solid ${entityColors.person.border}`, borderRadius: 8 } },
-    { id: 'property', position: { x: 140, y: 170 }, data: { label: <div className="kb-node"><span className="kb-node-type">부동산</span><span className="kb-node-value">정보 없음</span></div> }, style: { background: entityColors.asset.bg, border: `2px solid ${entityColors.asset.border}`, borderRadius: 8 } },
-    { id: 'deposit', position: { x: 50, y: 290 }, data: { label: <div className="kb-node"><span className="kb-node-type">보증금</span><span className="kb-node-value">정보 없음</span></div> }, style: { background: entityColors.money.bg, border: `2px solid ${entityColors.money.border}`, borderRadius: 8 } },
-    { id: 'period', position: { x: 230, y: 290 }, data: { label: <div className="kb-node"><span className="kb-node-type">계약기간</span><span className="kb-node-value">정보 없음</span></div> }, style: { background: entityColors.date.bg, border: `2px solid ${entityColors.date.border}`, borderRadius: 8 } },
-]
+// 폴백용 기본 그래프 생성 (스키마 기반)
+const createDefaultGraph = (contractData) => {
+    return buildCompleteGraph(contractData || {}, {})
+}
 
-const createDefaultEdges = () => [
-    { id: 'e1', source: 'landlord', target: 'property', label: '소유', type: 'smoothstep', style: { stroke: '#22c55e' }, markerEnd: { type: MarkerType.ArrowClosed, color: '#22c55e' } },
-    { id: 'e2', source: 'tenant', target: 'deposit', label: '지급', type: 'smoothstep', style: { stroke: '#ef4444' }, markerEnd: { type: MarkerType.ArrowClosed, color: '#ef4444' } },
-    { id: 'e3', source: 'tenant', target: 'property', label: '임차', type: 'smoothstep', style: { stroke: '#f59e0b' }, markerEnd: { type: MarkerType.ArrowClosed, color: '#f59e0b' } },
-]
-
-function ContractRelationHub({ contractData, entities, relations }) {
-    // AI 데이터가 있으면 동적 생성, 없으면 기존 데이터에서 생성
-    const initialNodes = useMemo(() => {
+function ContractRelationHub({ contractData, entities, relations, analysisResult }) {
+    // 스키마 기반 그래프 생성
+    const graphData = useMemo(() => {
+        // 1순위: AI entities/relations 데이터가 있으면 사용
         if (entities && entities.length > 0) {
-            return createNodesFromEntities(entities)
+            return { nodes: entities, edges: relations || [] }
         }
-        // contractData가 있으면 그걸로 기본 노드 값 채우기
+
+        // 2순위: contractData + analysisResult로 스키마 기반 그래프 생성
         if (contractData) {
-            return [
-                { id: 'landlord', position: { x: 50, y: 50 }, data: { label: <div className="kb-node"><span className="kb-node-type">임대인</span><span className="kb-node-value">{contractData.landlord || '미확인'}</span></div> }, style: { background: entityColors.person.bg, border: `2px solid ${entityColors.person.border}`, borderRadius: 8 } },
-                { id: 'tenant', position: { x: 230, y: 50 }, data: { label: <div className="kb-node"><span className="kb-node-type">임차인</span><span className="kb-node-value">{contractData.tenant || '미확인'}</span></div> }, style: { background: entityColors.person.bg, border: `2px solid ${entityColors.person.border}`, borderRadius: 8 } },
-                { id: 'property', position: { x: 140, y: 170 }, data: { label: <div className="kb-node"><span className="kb-node-type">부동산</span><span className="kb-node-value">{contractData.address || '미확인'}</span></div> }, style: { background: entityColors.asset.bg, border: `2px solid ${entityColors.asset.border}`, borderRadius: 8 } },
-                { id: 'deposit', position: { x: 50, y: 290 }, data: { label: <div className="kb-node"><span className="kb-node-type">보증금</span><span className="kb-node-value">{contractData.deposit ? `${(contractData.deposit / 100000000).toFixed(1)}억원` : '미확인'}</span></div> }, style: { background: entityColors.money.bg, border: `2px solid ${entityColors.money.border}`, borderRadius: 8 } },
-                { id: 'period', position: { x: 230, y: 290 }, data: { label: <div className="kb-node"><span className="kb-node-type">계약기간</span><span className="kb-node-value">{contractData.startDate && contractData.endDate ? `${contractData.startDate} ~ ${contractData.endDate}` : '미확인'}</span></div> }, style: { background: entityColors.date.bg, border: `2px solid ${entityColors.date.border}`, borderRadius: 8 } },
-            ]
+            return buildCompleteGraph(contractData, analysisResult || {})
         }
-        return createDefaultNodes()
-    }, [entities, contractData])
+
+        // 3순위: 빈 기본 그래프
+        return createDefaultGraph({})
+    }, [contractData, entities, relations, analysisResult])
+
+    const initialNodes = useMemo(() => {
+        const nodes = createNodesFromSchema(graphData)
+        return nodes.length > 0 ? nodes : createNodesFromSchema(createDefaultGraph(contractData))
+    }, [graphData, contractData])
 
     const initialEdges = useMemo(() => {
-        if (relations && relations.length > 0) {
-            return createEdgesFromRelations(relations)
-        }
-        return createDefaultEdges()
-    }, [relations])
+        const edges = createEdgesFromSchema(graphData)
+        return edges.length > 0 ? edges : createEdgesFromSchema(createDefaultGraph(contractData))
+    }, [graphData, contractData])
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
@@ -151,8 +153,8 @@ function ContractRelationHub({ contractData, entities, relations }) {
     return (
         <div className="relation-hub-graph">
             <div className="graph-header">
-                <h3 className="graph-title">Knowledge Graph</h3>
-                <span className="graph-badge">AI 분석</span>
+                <h3 className="graph-title">계약 관계도</h3>
+                <span className="graph-badge">Knowledge Graph</span>
             </div>
             <div className="graph-controls">
                 <button className="reset-btn" onClick={resetLayout}>
@@ -176,11 +178,11 @@ function ContractRelationHub({ contractData, entities, relations }) {
                 </ReactFlow>
             </div>
             <div className="graph-legend">
-                <span className="legend-item"><span className="dot" style={{ background: entityColors.person.main }}></span>사람</span>
-                <span className="legend-item"><span className="dot" style={{ background: entityColors.asset.main }}></span>자산</span>
-                <span className="legend-item"><span className="dot" style={{ background: entityColors.money.main }}></span>금액</span>
-                <span className="legend-item"><span className="dot" style={{ background: entityColors.date.main }}></span>기간</span>
-                <span className="legend-item"><span className="dot" style={{ background: entityColors.organization.main }}></span>기관</span>
+                <span className="legend-item"><span className="dot" style={{ background: NODE_STYLES.person.color }}></span>사람</span>
+                <span className="legend-item"><span className="dot" style={{ background: NODE_STYLES.property.color }}></span>부동산</span>
+                <span className="legend-item"><span className="dot" style={{ background: NODE_STYLES.money.color }}></span>금액</span>
+                <span className="legend-item"><span className="dot" style={{ background: NODE_STYLES.right.color }}></span>권리</span>
+                <span className="legend-item"><span className="dot" style={{ background: NODE_STYLES.institution.color }}></span>기관</span>
             </div>
         </div>
     )
